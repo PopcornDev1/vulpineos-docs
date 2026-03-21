@@ -1,7 +1,6 @@
 import { Layout, Navbar } from 'nextra-theme-docs'
 import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
-import { headers } from 'next/headers'
 import 'nextra-theme-docs/style.css'
 
 export const metadata = {
@@ -9,44 +8,21 @@ export const metadata = {
   description: 'The first browser engine with AI agent security built into the C++ core.',
 }
 
-const vulpineLogo = (
+const logo = (
   <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '1.1rem' }}>
     <span>🦊</span>
     <span>VulpineOS</span>
   </span>
 )
 
-const foxbridgeLogo = (
-  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '1.1rem' }}>
-    <span>🌉</span>
-    <span>foxbridge</span>
-  </span>
+const navbar = (
+  <Navbar
+    logo={logo}
+    projectLink="https://github.com/PopcornDev1/VulpineOS"
+  />
 )
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const headersList = await headers()
-  const isFoxbridge = headersList.get('x-foxbridge') === '1'
-
-  const logo = isFoxbridge ? foxbridgeLogo : vulpineLogo
-  const projectLink = isFoxbridge
-    ? 'https://github.com/PopcornDev1/foxbridge'
-    : 'https://github.com/PopcornDev1/VulpineOS'
-  const docsBase = isFoxbridge
-    ? 'https://github.com/PopcornDev1/vulpineos-docs/tree/main/content/foxbridge'
-    : 'https://github.com/PopcornDev1/vulpineos-docs/tree/main/content'
-
-  // Only show foxbridge pages on subdomain, full site on main domain
-  const pageMap = isFoxbridge
-    ? await getPageMap('/foxbridge')
-    : await getPageMap()
-
-  const navbar = (
-    <Navbar
-      logo={logo}
-      projectLink={projectLink}
-    />
-  )
-
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <Head>
@@ -56,8 +32,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <Layout
           navbar={navbar}
-          pageMap={pageMap}
-          docsRepositoryBase={docsBase}
+          pageMap={await getPageMap()}
+          docsRepositoryBase="https://github.com/PopcornDev1/vulpineos-docs/tree/main/content"
           footer={<></>}
           sidebar={{ defaultMenuCollapseLevel: 1 }}
         >
