@@ -1,0 +1,86 @@
+# Remote Access
+
+VulpineOS supports running the browser kernel on one machine and the TUI on another. This is the recommended setup for production: run the kernel on a VPS with residential proxies, control it from your laptop.
+
+## Three Modes
+
+### 1. Local (Default)
+
+TUI and kernel on the same machine. No network involved.
+
+```bash
+./vulpineos
+```
+
+### 2. Server Mode
+
+Expose the kernel over a WebSocket endpoint:
+
+```bash
+./vulpineos --serve --port 8443 --api-key YOUR_SECRET_KEY
+```
+
+This starts:
+- The Firefox kernel
+- An HTTP/WebSocket server on the specified port
+- A `/health` endpoint for monitoring
+- A `/ws` endpoint for TUI connections
+
+### 3. Client Mode
+
+Connect the TUI to a remote kernel:
+
+```bash
+./vulpineos --remote wss://your-vps:8443/ws --api-key YOUR_SECRET_KEY
+```
+
+The TUI behaves identically to local mode — all panels, keybinds, and agent management work the same way. The WebSocket transport seamlessly replaces the pipe transport.
+
+## Authentication
+
+API key authentication supports two methods:
+
+- **Header:** `Authorization: Bearer YOUR_KEY`
+- **Query parameter:** `?token=YOUR_KEY`
+
+Keys are compared using constant-time comparison to prevent timing attacks.
+
+## Relay Protocol
+
+The WebSocket connection multiplexes three message types:
+
+| Type | Direction | Purpose |
+|------|-----------|---------|
+| `juggler` | Bidirectional | Juggler protocol messages (commands + responses) |
+| `control` | Client → Server | Administrative commands |
+| `tui_state` | Server → Client | State updates for TUI rendering |
+
+All Browser events (telemetry updates, injection alerts, trust warming state changes) are automatically broadcast to all connected clients.
+
+## Health Check
+
+```bash
+curl https://your-vps:8443/health
+# → {"status": "ok", "uptime": 3600, "contexts": 5}
+```
+
+## Network Requirements
+
+- **Port:** configurable (default 8443)
+- **Protocol:** WebSocket (ws:// or wss://)
+- **Bandwidth:** minimal — only JSON messages, not video/screenshots unless requested
+- **Latency:** TUI remains responsive up to ~200ms RTT
+
+## Security Considerations
+
+- Always use `wss://` (TLS) in production
+- Generate strong API keys: `openssl rand -hex 32`
+- The server does not expose the kernel binary or filesystem — only Juggler protocol access
+- Each connected client gets its own message queue; one slow client cannot block others
+
+## Files
+
+- `internal/remote/server.go` — HTTP/WS server with `/ws` and `/health`
+- `internal/remote/client.go` — WS client implementing `juggler.Transport`
+- `internal/remote/auth.go` — API key authenticator
+- `internal/remote/relay.go` — Envelope types for multiplexing

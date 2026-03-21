@@ -1,0 +1,97 @@
+# Docker (Vulpine-Box)
+
+Vulpine-Box is a one-click Docker container packaging the full VulpineOS + OpenClaw environment. Run the browser kernel on a VPS, connect from anywhere with the Go TUI.
+
+## Quick Start
+
+```bash
+git clone https://github.com/PopcornDev1/VulpineOS
+cd VulpineOS
+
+# Set your API key
+export VULPINE_API_KEY=$(openssl rand -hex 32)
+
+# Launch
+docker compose up -d
+```
+
+Connect from your local machine:
+
+```bash
+vulpineos --remote wss://your-vps:8443/ws --api-key $VULPINE_API_KEY
+```
+
+## Docker Compose
+
+The `docker-compose.yml` defines the service:
+
+```yaml
+services:
+  vulpineos:
+    build:
+      context: .
+      dockerfile: Dockerfile.vulpinebox
+    ports:
+      - "8443:8443"
+    environment:
+      - VULPINE_API_KEY=${VULPINE_API_KEY}
+    volumes:
+      - vulpine-vault:/root/.vulpineos
+      - vulpine-profiles:/root/.camoufox
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+volumes:
+  vulpine-vault:
+  vulpine-profiles:
+```
+
+## Persistent Volumes
+
+| Volume | Path | Purpose |
+|--------|------|---------|
+| `vulpine-vault` | `/root/.vulpineos` | SQLite vault (agents, identities, config) |
+| `vulpine-profiles` | `/root/.camoufox` | Browser profiles and cache |
+
+Data survives container restarts. To start fresh, remove the volumes:
+
+```bash
+docker compose down -v
+```
+
+## What's Inside
+
+The multi-stage Dockerfile builds:
+
+1. **Stage 1** — Go binary compilation (`CGO_ENABLED=0`, stripped)
+2. **Stage 2** — Ubuntu 22.04 runtime with:
+   - GTK/X11 libraries for Firefox rendering
+   - Xvfb virtual display (headless)
+   - Pre-built Camoufox binary
+   - Node.js + OpenClaw
+
+## Entrypoint
+
+The `scripts/entrypoint.sh` script:
+
+1. Starts Xvfb on display `:99`
+2. Launches `vulpineos --serve --port 8443 --api-key $VULPINE_API_KEY`
+3. Optional TLS if certificates are mounted
+
+## Memory
+
+Each browser context uses roughly 10-15 MB. With the 4 GB memory limit, you can comfortably run 20-30 concurrent contexts with headroom for the kernel itself. Adjust the memory limit in `docker-compose.yml` for larger deployments.
+
+## TLS
+
+To enable TLS, mount your certificates:
+
+```yaml
+volumes:
+  - ./certs/fullchain.pem:/etc/vulpineos/cert.pem:ro
+  - ./certs/privkey.pem:/etc/vulpineos/key.pem:ro
+```
+
+The entrypoint auto-detects mounted certificates and enables TLS on the WebSocket endpoint.

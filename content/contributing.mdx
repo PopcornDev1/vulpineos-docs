@@ -1,0 +1,80 @@
+# Contributing
+
+VulpineOS is developed by [Clover Labs](https://github.com/CloverLabsAI). Contributions are welcome — here's how to get involved.
+
+## Repository
+
+- **Main repo:** [PopcornDev1/VulpineOS](https://github.com/PopcornDev1/VulpineOS)
+- **Docs:** [PopcornDev1/vulpineos-docs](https://github.com/PopcornDev1/vulpineos-docs)
+- **Foxbridge:** [PopcornDev1/foxbridge](https://github.com/PopcornDev1/foxbridge)
+
+## Development Setup
+
+1. Fork and clone the repo
+2. Follow the [Build from Source](/building) guide
+3. Make your changes
+4. Test with `go test ./...` (66 tests across 8 packages)
+5. Submit a pull request
+
+## Code Structure
+
+### Go Packages (`internal/`)
+
+| Package | Purpose |
+|---------|---------|
+| `tui/` | Bubbletea TUI components (app, panels, shared styles) |
+| `juggler/` | Juggler protocol client (pipe transport, RPC, events) |
+| `kernel/` | Firefox process management |
+| `vault/` | SQLite identity/agent storage |
+| `pool/` | Browser context pooling |
+| `orchestrator/` | Ties kernel + pool + vault + agents together |
+| `openclaw/` | OpenClaw agent subprocess management |
+| `mcp/` | MCP server for browser tools |
+| `remote/` | WebSocket server/client for remote access |
+| `proxy/` | Proxy parsing, geo resolution, fingerprint sync |
+| `monitor/` | Rate limit and bot detection pattern matching |
+| `config/` | Config file management, setup wizard |
+
+### JavaScript (`additions/juggler/`)
+
+| File | Purpose |
+|------|---------|
+| `protocol/Protocol.js` | Wire protocol definitions |
+| `protocol/PageHandler.js` | Browser-process IPC handlers |
+| `protocol/BrowserHandler.js` | Browser-level command handlers |
+| `content/PageAgent.js` | Content-process implementation (AX tree, injection filter, optimized DOM) |
+| `content/main.js` | Content-process bootstrap (action lock) |
+| `TargetRegistry.js` | Page/context lifecycle management |
+| `TelemetryService.js` | Memory/CPU/risk telemetry |
+| `TrustWarmService.js` | Background profile warming |
+
+### C++ Patches (`patches/`)
+
+Unified diffs applied to Firefox source. The main VulpineOS-specific patch is `action-lock.patch` which adds `suspendPage()`/`resumePage()` to `nsDocShell`.
+
+## Testing
+
+```bash
+# Run all Go tests
+go test ./...
+
+# Run with race detector
+go test -race ./...
+
+# Run specific package
+go test ./internal/vault/...
+```
+
+## Commit Style
+
+- One-line commit messages
+- Descriptive but concise (e.g., `feat: add proxy geo resolution`, `fix: context pool deadlock on recycle`)
+- Prefix with `feat:`, `fix:`, `refactor:`, `docs:`, `test:` as appropriate
+
+## Areas for Contribution
+
+- **Foxbridge CDP domains** — expanding the CDP-to-Juggler translation layer
+- **Additional visibility checks** — new CSS tricks used for injection
+- **MCP tools** — new browser actions for agents
+- **TUI improvements** — new panels, better layouts, accessibility
+- **Documentation** — examples, tutorials, API reference

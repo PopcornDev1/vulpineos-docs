@@ -1,0 +1,65 @@
+# VulpineOS
+
+**The first browser engine with AI agent security built into the C++ core.**
+
+VulpineOS is a hardened Firefox fork (based on [Camoufox](https://github.com/AtomoTech/camoufox) / Firefox 146.0.1) purpose-built for autonomous AI agents. It solves the three critical problems that make current browser-based agents fragile and exploitable.
+
+## The Problem
+
+AI agents browsing the web face three unsolved challenges:
+
+1. **Prompt Injection** — Malicious websites hide invisible text in the DOM that hijacks the agent's instructions. Current agents have zero defense against this.
+
+2. **Page Mutation** — The page changes between when the agent reads it and when it acts. JavaScript timers, animations, and network callbacks mutate the DOM mid-decision, causing the agent to click on elements that no longer exist or have moved.
+
+3. **Token Waste** — Accessibility trees are bloated with structural noise. Agents burn 50-70% of their context window on wrapper divs, generic groups, and redundant whitespace that carry no semantic value.
+
+## The Solution
+
+VulpineOS addresses each problem at the browser engine level — not with JavaScript hacks or post-processing, but with C++ patches to Firefox's core:
+
+| Phase | Feature | Layer |
+|-------|---------|-------|
+| 1 | [Injection-Proof Filter](/injection-filter) | Accessibility tree pruning |
+| 2 | [Action Lock](/action-lock) | C++ page freeze (nsDocShell) |
+| 3 | [Optimized DOM Export](/optimized-dom) | Token-compressed snapshots |
+| 4 | [Trust Warming](/trust-warming) | Background profile warming |
+
+## Quick Start
+
+```bash
+# Clone and build
+git clone https://github.com/PopcornDev1/VulpineOS
+cd VulpineOS
+make fetch && make setup && make dir && make build
+
+# Launch the TUI
+./vulpineos
+```
+
+On first launch, the setup wizard walks you through selecting an AI provider and model. See [Getting Started](/getting-started) for full instructions.
+
+## Architecture
+
+VulpineOS ships as a single Go binary (`vulpineos`) that manages the Firefox kernel, a context pool for 100+ concurrent agents, an identity vault, and OpenClaw agent orchestration — all communicating over the Juggler protocol via pipe FD 3/4.
+
+```
+┌─────────────────────────────────────────┐
+│  Go TUI (Bubbletea)                     │
+│  ┌──────────┬────────────┬───────────┐  │
+│  │ System   │ Conversation│ Agent     │  │
+│  │ + Agents │            │ Detail    │  │
+│  └──────────┴────────────┴───────────┘  │
+├─────────────────────────────────────────┤
+│  Orchestrator · Pool · Vault · MCP      │
+├─────────────────────────────────────────┤
+│  Juggler Protocol (FD 3/4 pipe)         │
+├─────────────────────────────────────────┤
+│  Camoufox (Firefox 146.0.1)             │
+│  C++ Patches: Action Lock, AX Filter    │
+└─────────────────────────────────────────┘
+```
+
+## Credits
+
+VulpineOS is built on [Camoufox](https://github.com/AtomoTech/camoufox), originally created by [daijro](https://github.com/daijro) and maintained by [Clover Labs](https://github.com/CloverLabsAI). The anti-detection fingerprinting, mouse trajectory algorithms, and Juggler automation layer all originate from that project.

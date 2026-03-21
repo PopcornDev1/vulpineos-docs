@@ -1,0 +1,112 @@
+# Build from Source
+
+VulpineOS is a fork of [Camoufox](https://github.com/AtomoTech/camoufox), itself based on Firefox 146.0.1. The build system uses Make targets that orchestrate Firefox's `mach` build tool.
+
+## Prerequisites
+
+- **macOS** (Apple Silicon or Intel) or **Linux** (x86_64)
+- **Python 3.10+** — required by Firefox's mach build system
+- **Go 1.26+** — for the TUI binary
+- **Node.js 18+** — for OpenClaw
+- ~40 GB disk space for the Firefox source tree + build artifacts
+
+### macOS Additional
+
+```bash
+xcode-select --install
+brew install mercurial yasm
+```
+
+### Linux Additional
+
+```bash
+sudo apt install build-essential libgtk-3-dev libdbus-glib-1-dev \
+  yasm nasm python3-pip
+```
+
+## Build Steps
+
+### 1. Fetch Source
+
+```bash
+make fetch
+```
+
+Downloads the Firefox 146.0.1 source tarball (~300 MB).
+
+### 2. Setup
+
+```bash
+make setup
+```
+
+Extracts the tarball and initializes a git repository inside the source tree (used for tracking patch application).
+
+### 3. Apply Patches + Additions
+
+```bash
+make dir
+```
+
+This runs `scripts/patch.py` to apply all unified diffs from `patches/` and `scripts/copy-additions.sh` to copy new files from `additions/` into the Firefox source tree.
+
+Key patches:
+- `action-lock.patch` — C++ page freeze (`nsDocShell`)
+- Camoufox fingerprinting patches (inherited)
+
+Key additions:
+- `additions/juggler/` — the entire Juggler automation layer
+- `additions/juggler/TelemetryService.js` — VulpineOS telemetry
+- `additions/juggler/TrustWarmService.js` — trust warming
+
+### 4. Compile
+
+```bash
+make build
+```
+
+Runs `./mach build` inside the Firefox source tree. On Apple Silicon with artifact builds enabled, this takes roughly 5 minutes. Full builds on Linux take 30-60 minutes.
+
+### 5. Build the Go Binary
+
+```bash
+go build -o vulpineos ./cmd/vulpineos
+```
+
+Produces a ~11 MB binary with the full TUI, remote connectivity, MCP server, and orchestrator.
+
+### 6. Install OpenClaw
+
+```bash
+npm install
+```
+
+Installs OpenClaw as a dependency (configured in the repo's `package.json`).
+
+### 7. Package (macOS)
+
+```bash
+make package-macos
+```
+
+Creates a distributable `.app` bundle.
+
+## Repository Structure
+
+```
+VulpineOS/
+├── patches/           # Unified diffs applied to Firefox source
+├── additions/         # New files copied into Firefox source tree
+│   └── juggler/       # Playwright wire protocol + VulpineOS services
+├── settings/          # Preferences (camoufox.cfg) and branding
+├── scripts/           # Build orchestration (patch.py, copy-additions.sh)
+├── cmd/vulpineos/     # Go CLI entry point
+├── internal/          # Go packages (TUI, kernel, vault, pool, etc.)
+├── go.mod
+├── package.json       # OpenClaw dependency
+└── Makefile
+```
+
+## Artifact Builds
+
+On macOS with Apple Silicon, Firefox supports artifact builds that download precompiled C++ components and only rebuild JavaScript/resource changes. This reduces build time from 30+ minutes to under 5 minutes. VulpineOS's `make build` uses this automatically when available.

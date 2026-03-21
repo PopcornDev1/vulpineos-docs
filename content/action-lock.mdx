@@ -1,0 +1,80 @@
+# Action Lock (Deterministic Execution)
+
+**Phase 2** — Freezes the page completely while the AI agent is thinking. No JavaScript, no timers, no layout reflows, no animations, no events. The page the agent analyzed is exactly the page it acts on.
+
+## The Problem
+
+Between reading the page and executing an action, the DOM can change. JavaScript timers fire, CSS animations move elements, network callbacks update content, and event handlers reshape the layout. The agent clicks where a button *was*, not where it *is*.
+
+## How It Works
+
+Action Lock patches Firefox's C++ core (`nsDocShell`) with two new methods:
+
+- **`suspendPage()`** — freezes the refresh driver, suspends all timers/intervals/network callbacks, and suppresses event handling
+- **`resumePage()`** — reverses the freeze in opposite order
+
+The freeze pipeline:
+
+```
+Page.setActionLock({enabled: true})
+        │
+        ▼
+  1. allowJavascript = false  (all frames)
+        │
+        ▼
+  2. nsRefreshDriver::Freeze()
+     - No layout reflow
+     - No CSS animation ticks
+     - No requestAnimationFrame
+        │
+        ▼
+  3. nsPIDOMWindowInner::Suspend()
+     - setTimeout/setInterval paused
+     - Promise microtasks held
+     - Network callbacks queued
+        │
+        ▼
+  4. PresShell::SuppressEventHandling()
+     - Mouse/keyboard events dropped
+     - Mutation observers paused
+
+  ═══════════════════════════════
+  Page is now deterministically frozen
+  ═══════════════════════════════
+
+Page.setActionLock({enabled: false})
+        │
+        ▼
+  Thaw in reverse order: 4 → 3 → 2 → 1
+```
+
+## Protocol
+
+```json
+// Freeze
+{"method": "Page.setActionLock", "params": {"enabled": true}}
+
+// Thaw
+{"method": "Page.setActionLock", "params": {"enabled": false}}
+```
+
+## Safety: Navigation Auto-Release
+
+If the page navigates while the lock is held, the lock is automatically released. This prevents deadlocks from agents that freeze a page and then navigate away.
+
+## Configuration
+
+Action Lock is **enabled by default** (the method is available). To disable the capability entirely:
+
+```
+vulpineos.actionlock.enabled = false
+```
+
+## Files Modified
+
+- `patches/action-lock.patch` — C++ patch adding `suspendPage()`/`resumePage()` to `nsDocShell`
+- `additions/juggler/protocol/Protocol.js` — `Page.setActionLock` method definition
+- `additions/juggler/protocol/PageHandler.js` — handler routing
+- `additions/juggler/TargetRegistry.js` — `PageTarget.setActionLock()` IPC bridge
+- `additions/juggler/content/main.js` — content-process freeze/thaw logic
+- `settings/camoufox.cfg` — `vulpineos.actionlock.enabled` preference

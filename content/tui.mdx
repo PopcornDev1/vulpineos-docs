@@ -1,0 +1,71 @@
+# TUI Workbench
+
+VulpineOS ships a terminal-based workbench built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss). It provides a 3-column agent-centric interface for managing the browser kernel, spawning agents, and monitoring conversations in real-time.
+
+## Layout
+
+```
+┌─────────────┬──────────────────────┬──────────────┐
+│ System Info  │                      │ Agent Detail  │
+│ ─────────── │                      │ ────────────  │
+│ Kernel: ● ON│    Conversation      │ Name: Scout   │
+│ Mem: ██░ 45%│                      │ Status: Active│
+│ Risk: Low   │  Agent: Show me the  │ Tokens: 12.4k │
+│ Pool: 3/20  │  latest HN posts     │ Proxy: US-1   │
+│             │                      │               │
+│ Agents      │  VulpineOS: Found    │ Contexts      │
+│ ─────────── │  15 stories on the   │ ────────────  │
+│ ● Scout     │  front page...       │ ctx-a8f2      │
+│ ◌ Crawler   │                      │  hn.com       │
+│ ✓ Archiver  │  [input area]        │               │
+│ ⏸ Monitor   │                      │               │
+└─────────────┴──────────────────────┴──────────────┘
+```
+
+### Left Column
+- **System Info** — kernel status, memory usage, detection risk gauge, context pool utilization, page count
+- **Agent List** — all agents with status icons: `●` active, `◌` idle, `✓` completed, `⏸` paused, `✗` failed
+
+### Center Column
+- **Conversation** — full-height scrollable chat display. Messages are color-coded by role (user, assistant, system). Text input at the bottom, Claude CLI style.
+
+### Right Column
+- **Agent Detail** — name, status, token usage, task description, fingerprint profile, assigned proxy
+- **Context List** — active browser contexts for the selected agent with URLs
+
+## Agent Lifecycle
+
+```
+CREATE ──→ ACTIVE ──→ PAUSED ──→ ACTIVE ──→ COMPLETED
+                                              or FAILED
+```
+
+Agents are **persistent** — their conversations are stored in the SQLite vault and survive restarts. Each agent gets a deterministic fingerprint generated from a seed, so resuming an agent maintains the same browser identity.
+
+## Key Bindings
+
+| Key | Action |
+|-----|--------|
+| `n` | Create new agent (prompts for name, then task) |
+| `j` / `k` | Navigate agent list up/down |
+| `Enter` | Send message to selected agent |
+| `p` | Pause selected agent (`/savestate` sent to OpenClaw) |
+| `r` | Resume paused agent with saved session |
+| `x` | Delete agent and its conversation history |
+| `Tab` | Cycle focus: Agent List → Conversation → Agent Detail → Contexts |
+| `Esc` | Cancel current input / go back |
+| `Shift+S` | Open settings panel (replaces center column) |
+| `c` | Re-open setup wizard to change provider/model |
+| `q` | Quit VulpineOS |
+
+## Settings Panel
+
+Press `Shift+S` to open the 3-tab settings panel:
+
+1. **General** — AI provider, model, API key
+2. **Proxies** — import proxy URLs, test latency, resolve geo, delete
+3. **Skills** — toggle global OpenClaw skills on/off
+
+## Theme
+
+The TUI uses a violet/cyan/green/amber/red palette defined in `internal/tui/shared/styles.go`, matching the VulpineOS brand.

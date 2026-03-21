@@ -1,0 +1,88 @@
+# Autonomous Trust Warming
+
+**Phase 4** — Background service that warms browser profiles on high-authority sites with human-like interactions while the agent is idle, building organic browsing history to defeat bot detection.
+
+## Why Trust Warming?
+
+Bot detection systems like Cloudflare, DataDome, and PerimeterX don't just check fingerprints — they check behavioral signals. A browser profile with zero history that suddenly navigates to a target site is suspicious. Trust warming builds a realistic browsing history before the agent needs it.
+
+## State Machine
+
+```
+STOPPED ──→ IDLE ──→ WARMING ──→ PAUSING ──→ IDLE
+   ▲                                           │
+   └───────────────────────────────────────────┘
+```
+
+- **STOPPED** — service not running
+- **IDLE** — waiting for the next warm cycle (agent may be busy)
+- **WARMING** — actively visiting a site with human-like interactions
+- **PAUSING** — cooldown between visits
+
+## Human-Like Interactions
+
+The warming service performs realistic browsing sequences:
+
+1. **Bezier mouse trajectories** — JS port of the C++ algorithm from `MouseTrajectories.hpp`. Curved paths with slight overshoot and correction, matching human motor patterns.
+
+2. **Gaussian-randomized timing** — dwell times, scroll pauses, and hover durations follow normal distributions, not uniform random.
+
+3. **Interaction sequences** — Each visit includes a mix of:
+   - Page scrolling (variable speed and distance)
+   - Hovering over links and buttons
+   - Occasional clicks on navigation elements
+   - Natural dwell time before leaving
+
+## Default Sites
+
+Sites are weighted and rate-limited to prevent over-visiting:
+
+| Site | Weight | Purpose |
+|------|--------|---------|
+| Google | High | Search engine trust |
+| YouTube | High | Media engagement |
+| Wikipedia | Medium | Reference browsing |
+| Reddit | Medium | Social browsing |
+| Amazon | Medium | E-commerce trust |
+| Hacker News | Low | Tech browsing |
+| GitHub | Low | Developer profile |
+
+## Protocol
+
+```json
+// Start warming
+{
+  "method": "Browser.startTrustWarming",
+  "params": {
+    "browserContextId": "ctx-1",
+    "sites": ["google.com", "youtube.com"],
+    "interactionIntensity": 0.7,
+    "cooldownMinutes": 5
+  }
+}
+
+// Check status
+{"method": "Browser.getTrustWarmingStatus"}
+// → {"state": "WARMING", "sitesWarmed": 3, "currentSite": "youtube.com"}
+
+// Notify service that agent is busy (pauses warming)
+{"method": "Browser.notifyTrustWarmingBusy"}
+
+// Notify service that agent is idle (resumes warming)
+{"method": "Browser.notifyTrustWarmingIdle"}
+```
+
+## Configuration
+
+Trust warming is **opt-in** (disabled by default) since aggressive warming can itself trigger bot detection:
+
+```
+vulpineos.trustwarm.enabled = false   // default
+```
+
+## Files
+
+- `additions/juggler/TrustWarmService.js` — core service module (~350 lines)
+- `additions/juggler/protocol/Protocol.js` — 5 new `Browser.*` methods + event
+- `additions/juggler/protocol/BrowserHandler.js` — handler wiring
+- `settings/camoufox.cfg` — `vulpineos.trustwarm.enabled` preference

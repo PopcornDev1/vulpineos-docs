@@ -1,0 +1,74 @@
+# Architecture
+
+VulpineOS is a vertically integrated stack: a hardened Firefox engine at the bottom, a Go orchestration layer in the middle, and a Bubbletea TUI at the top. Everything communicates over the Juggler wire protocol.
+
+## System Overview
+
+```
+┌──────────────────────────────────────────────────┐
+│                   Go Binary                       │
+│                                                   │
+│  ┌─────────────────────────────────────────────┐  │
+│  │  TUI (Bubbletea)                            │  │
+│  │  3-column workbench: agents, chat, detail   │  │
+│  └──────────────┬──────────────────────────────┘  │
+│                 │                                  │
+│  ┌──────────────▼──────────────────────────────┐  │
+│  │  Orchestrator                               │  │
+│  │  ┌──────────┬──────────┬─────────────────┐  │  │
+│  │  │ Pool     │ Vault    │ OpenClaw Mgr    │  │  │
+│  │  │ (contexts)│ (SQLite) │ (agent procs)  │  │  │
+│  │  └──────────┴──────────┴─────────────────┘  │  │
+│  └──────────────┬──────────────────────────────┘  │
+│                 │ Juggler (FD 3/4 pipe)           │
+├─────────────────┼────────────────────────────────┤
+│  ┌──────────────▼──────────────────────────────┐  │
+│  │  Camoufox (Firefox 146.0.1)                 │  │
+│  │                                              │  │
+│  │  ┌──────────────────────────────────┐        │  │
+│  │  │  Juggler (automation layer)      │        │  │
+│  │  │  Protocol.js · PageHandler.js    │        │  │
+│  │  │  PageAgent.js · TargetRegistry   │        │  │
+│  │  ├──────────────────────────────────┤        │  │
+│  │  │  VulpineOS Services              │        │  │
+│  │  │  TelemetryService.js             │        │  │
+│  │  │  TrustWarmService.js             │        │  │
+│  │  ├──────────────────────────────────┤        │  │
+│  │  │  C++ Core Patches                │        │  │
+│  │  │  action-lock.patch (nsDocShell)  │        │  │
+│  │  └──────────────────────────────────┘        │  │
+│  └──────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────┘
+```
+
+## Juggler Protocol
+
+Juggler is VulpineOS's wire protocol — a JSON-RPC layer originally from Playwright's Firefox support, extended with VulpineOS-specific methods. It runs over a pipe (FD 3 for reading, FD 4 for writing) using null-byte delimited JSON frames.
+
+Key domains:
+- **Browser** — context management, telemetry, trust warming, cookie operations
+- **Page** — navigation, snapshots, action lock, accessibility tree, optimized DOM
+
+## Context Pool
+
+A single Firefox process hosts multiple browser contexts (isolated cookie/storage environments). The pool pre-warms 10 contexts on startup, supports up to 20 concurrent active contexts, and recycles each after 50 uses to prevent memory leaks. Each context costs roughly 10-15 MB.
+
+## Identity Vault
+
+SQLite database at `~/.vulpineos/vault.db` storing:
+- **Citizens** — persistent identities with cookies, localStorage, fingerprint seeds
+- **Templates** — reusable SOPs (Standard Operating Procedures) for agents
+- **Nomad Sessions** — ephemeral throwaway identities
+
+## OpenClaw Integration
+
+OpenClaw agents connect to the browser through VulpineOS's MCP (Model Context Protocol) server. The MCP server translates tool calls like `vulpine_snapshot` and `vulpine_click` into Juggler protocol messages. This replaces Chrome entirely — agents use Camoufox without knowing it.
+
+## Remote Architecture
+
+VulpineOS supports three modes:
+1. **Local** — TUI + kernel on the same machine (default)
+2. **Server** — kernel exposes a WebSocket endpoint (`--serve`)
+3. **Client** — TUI connects to a remote kernel (`--remote wss://...`)
+
+The remote relay multiplexes Juggler messages, control commands, and TUI state updates over a single authenticated WebSocket connection.

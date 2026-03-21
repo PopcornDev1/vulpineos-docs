@@ -1,0 +1,103 @@
+# Getting Started
+
+This guide walks you through installing VulpineOS and launching your first AI agent.
+
+## Prerequisites
+
+- **macOS** (Apple Silicon or Intel) or **Linux** (x86_64)
+- **Go 1.26+** — for building the TUI binary
+- **Node.js 18+** — for OpenClaw agent runtime
+- **Python 3.10+** — for full fingerprint generation (optional, falls back to built-in profiles)
+- **Make** — build orchestration
+
+## Installation
+
+### Option 1: Build from Source
+
+```bash
+git clone https://github.com/PopcornDev1/VulpineOS
+cd VulpineOS
+
+# Build the browser engine
+make fetch     # Download Firefox 146.0.1 source
+make setup     # Extract and initialize
+make dir       # Apply patches + copy additions
+make build     # Compile (artifact builds: ~5 min on M1)
+
+# Build the Go binary
+go build -o vulpineos ./cmd/vulpineos
+
+# Install OpenClaw
+npm install
+```
+
+### Option 2: Docker (Vulpine-Box)
+
+```bash
+git clone https://github.com/PopcornDev1/VulpineOS
+cd VulpineOS
+docker compose up -d
+```
+
+Then connect from any machine:
+```bash
+vulpineos --remote wss://your-server:8443/ws --api-key YOUR_KEY
+```
+
+## First Run
+
+Launch VulpineOS:
+
+```bash
+./vulpineos
+```
+
+On first launch, the **setup wizard** appears:
+
+1. **Select AI Provider** — Choose from 31 supported providers (Anthropic, OpenAI, Google, xAI, Ollama, and more)
+2. **Enter API Key** — Paste your API key for the selected provider
+3. **Choose Model** — Pick the model to power your agents
+
+The wizard saves configuration to `~/.vulpineos/config.json` and generates `~/.vulpineos/openclaw.json` automatically.
+
+## Creating Your First Agent
+
+Once in the TUI workbench:
+
+1. Press **`n`** to create a new agent
+2. Type a name and press **Enter**
+3. Type a task description (e.g., "Search for the latest AI news on Hacker News")
+4. Press **Enter** — the agent spawns and begins working
+
+The center panel shows the agent's conversation in real-time. The right panel shows its browser contexts, token usage, and fingerprint profile.
+
+## Key Bindings
+
+| Key | Action |
+|-----|--------|
+| `n` | New agent |
+| `j` / `k` | Navigate agent list |
+| `Enter` | Send message to agent |
+| `p` | Pause agent |
+| `r` | Resume agent |
+| `x` | Delete agent |
+| `Shift+S` | Open settings |
+| `c` | Reconfigure provider/model |
+| `Tab` | Cycle focus between panels |
+| `q` | Quit |
+
+## Demo Mode
+
+To explore the TUI without launching the browser engine:
+
+```bash
+./vulpineos --no-browser
+```
+
+This runs the full interface with simulated data — useful for testing layouts or developing new panels.
+
+## Next Steps
+
+- [Architecture](/architecture) — understand the full stack
+- [Injection Filter](/injection-filter) — how VulpineOS protects agents from prompt injection
+- [MCP Tools](/mcp-tools) — the browser tools available to agents

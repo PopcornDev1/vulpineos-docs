@@ -1,0 +1,80 @@
+# Token-Optimized DOM Export
+
+**Phase 3** — Compressed semantic JSON snapshot of the page for LLM context windows, achieving over 50% token reduction compared to the standard accessibility tree.
+
+## The Problem
+
+A typical accessibility tree for a modern web page consumes 5,000-20,000 tokens. Most of those tokens are structural noise: wrapper divs, generic groups, section containers, paragraph wrappers, and redundant whitespace. The AI agent needs semantic content, not DOM bureaucracy.
+
+## Output Format
+
+The optimized DOM uses an array-of-tuples format where each node is `[depth, roleCode, name, props?]`:
+
+```json
+{
+  "v": 1,
+  "title": "Hacker News",
+  "url": "https://news.ycombinator.com",
+  "nodes": [
+    [0, "doc", "Hacker News"],
+    [1, "nav", "Navigation"],
+    [2, "lnk", "new", {"href": "/newest"}],
+    [2, "lnk", "comments", {"href": "/newcomments"}],
+    [1, "lst", ""],
+    [2, "li", "Show HN: VulpineOS"],
+    [2, "li", "Ask HN: Best AI agent frameworks?"]
+  ]
+}
+```
+
+## Compression Strategies
+
+| Strategy | Example | Savings |
+|----------|---------|---------|
+| Short role codes | `heading` → `h2`, `button` → `btn`, `link` → `lnk` | ~30% on role strings |
+| Skip structural wrappers | `section`, `group`, `paragraph` removed | ~20% node reduction |
+| Single-child flattening | Parent with one child → merge into parent | ~10% node reduction |
+| Adjacent text merging | Three text nodes → one combined string | ~5% token reduction |
+| Omit empty/default fields | No `props` key if empty | ~5% overhead reduction |
+
+## Role Code Map
+
+Over 50 roles are mapped to short codes:
+
+| Role | Code | Role | Code |
+|------|------|------|------|
+| document | `doc` | heading (level N) | `hN` |
+| button | `btn` | link | `lnk` |
+| textbox | `txt` | checkbox | `chk` |
+| radio | `rad` | combobox | `cmb` |
+| listitem | `li` | navigation | `nav` |
+| table | `tbl` | row | `row` |
+| cell | `cel` | image | `img` |
+
+## Protocol
+
+```json
+{
+  "method": "Page.getOptimizedDOM",
+  "params": {
+    "maxDepth": 10,
+    "maxNodes": 500,
+    "maxTextLength": 200
+  }
+}
+```
+
+All parameters are optional — sensible defaults are applied.
+
+## Configuration
+
+```
+vulpineos.dom_export.enabled = true   // default
+```
+
+## Files Modified
+
+- `additions/juggler/content/PageAgent.js` — `ROLE_MAP`, `SKIP_ROLES`, `_getOptimizedDOM()` method
+- `additions/juggler/protocol/Protocol.js` — `Page.getOptimizedDOM` definition
+- `additions/juggler/protocol/PageHandler.js` — handler routing
+- `settings/camoufox.cfg` — `vulpineos.dom_export.enabled` preference

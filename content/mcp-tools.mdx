@@ -1,0 +1,156 @@
+# MCP Tools
+
+VulpineOS provides a [Model Context Protocol](https://spec.modelcontextprotocol.io/) (MCP) server that exposes browser automation as tool calls. OpenClaw agents use these tools instead of Chrome — every browser action goes through Camoufox via the Juggler protocol.
+
+Launch the MCP server standalone:
+
+```bash
+./vulpineos --mcp-server
+```
+
+## Available Tools
+
+### vulpine_navigate
+
+Navigate to a URL in the active browser context.
+
+```json
+{
+  "name": "vulpine_navigate",
+  "arguments": {
+    "url": "https://news.ycombinator.com"
+  }
+}
+```
+
+### vulpine_snapshot
+
+Get a token-optimized DOM snapshot (Phase 3). This is the primary tool agents use to understand the page — it returns over 50% fewer tokens than a raw accessibility tree.
+
+```json
+{
+  "name": "vulpine_snapshot",
+  "arguments": {
+    "maxDepth": 10,
+    "maxNodes": 500
+  }
+}
+```
+
+### vulpine_click
+
+Click an element by CSS selector or accessibility reference.
+
+```json
+{
+  "name": "vulpine_click",
+  "arguments": {
+    "selector": "#submit-button"
+  }
+}
+```
+
+### vulpine_type
+
+Type text into a focused element or a specified selector.
+
+```json
+{
+  "name": "vulpine_type",
+  "arguments": {
+    "selector": "input[name='search']",
+    "text": "VulpineOS agent security"
+  }
+}
+```
+
+### vulpine_screenshot
+
+Capture a screenshot of the current page (returns base64 PNG).
+
+```json
+{
+  "name": "vulpine_screenshot",
+  "arguments": {
+    "fullPage": false
+  }
+}
+```
+
+### vulpine_scroll
+
+Scroll the page by a specified amount.
+
+```json
+{
+  "name": "vulpine_scroll",
+  "arguments": {
+    "direction": "down",
+    "amount": 500
+  }
+}
+```
+
+### vulpine_new_context
+
+Create a new isolated browser context. Each context has its own cookies, storage, and fingerprint.
+
+```json
+{
+  "name": "vulpine_new_context",
+  "arguments": {}
+}
+```
+
+### vulpine_close_context
+
+Close a browser context and free its resources back to the pool.
+
+```json
+{
+  "name": "vulpine_close_context",
+  "arguments": {
+    "contextId": "ctx-a8f2"
+  }
+}
+```
+
+### vulpine_get_ax_tree
+
+Get the raw accessibility tree (with injection filter applied). Use `vulpine_snapshot` instead for token efficiency — this is provided for compatibility.
+
+```json
+{
+  "name": "vulpine_get_ax_tree",
+  "arguments": {}
+}
+```
+
+## OpenClaw Configuration
+
+VulpineOS auto-generates `~/.vulpineos/openclaw.json` with Chrome disabled and VulpineOS MCP configured:
+
+```json
+{
+  "browser": {
+    "enabled": false
+  },
+  "mcpServers": {
+    "vulpineos": {
+      "command": "/path/to/vulpineos",
+      "args": ["--mcp-server"]
+    }
+  }
+}
+```
+
+## Key Advantage
+
+The `vulpine_snapshot` tool uses Phase 3's optimized DOM export, meaning every page read by an agent automatically benefits from token compression, injection filtering, and semantic extraction — with no agent-side code changes.
+
+## Files
+
+- `internal/mcp/server.go` — stdio MCP server
+- `internal/mcp/tools.go` — tool definitions and Juggler translation
+- `internal/mcp/protocol.go` — MCP JSON-RPC 2.0 types
+- `internal/openclaw/config.go` — OpenClaw config generation
