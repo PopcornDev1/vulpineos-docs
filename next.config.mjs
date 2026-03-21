@@ -6,8 +6,9 @@ export default withNextra({
   images: { unoptimized: true },
   async rewrites() {
     return {
-      beforeFiles: [
+      afterFiles: [
         // foxbridge.vulpineos.com → /foxbridge pages
+        // afterFiles runs AFTER static file matching, so /_next/* assets serve normally
         {
           source: '/:path*',
           has: [{ type: 'host', value: 'foxbridge.vulpineos.com' }],
