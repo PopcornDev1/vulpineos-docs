@@ -1,79 +1,115 @@
 # MCP Tools
 
-VulpineOS provides a [Model Context Protocol](https://spec.modelcontextprotocol.io/) (MCP) server that exposes browser automation as tool calls. OpenClaw agents use these tools instead of Chrome — every browser action goes through Camoufox via the Juggler protocol.
-
-Launch the MCP server standalone:
+VulpineOS provides a [Model Context Protocol](https://spec.modelcontextprotocol.io/) (MCP) server that exposes browser automation as tool calls. OpenClaw agents use these tools to browse — every action goes through Camoufox.
 
 ```bash
 ./vulpineos --mcp-server
 ```
 
-## Available Tools
-
-### vulpine_navigate
-
-Navigate to a URL in the active browser context.
-
-```json
-{
-  "name": "vulpine_navigate",
-  "arguments": {
-    "url": "https://news.ycombinator.com"
-  }
-}
-```
+## Available Tools (12)
 
 ### vulpine_snapshot
 
-Get a token-optimized DOM snapshot (Phase 3). This is the primary tool agents use to understand the page — it returns over 50% fewer tokens than a raw accessibility tree.
+Get a token-optimized DOM snapshot (Phase 3). The primary tool agents use to understand the page — returns >50% fewer tokens than raw HTML. Interactive elements include `@ref` identifiers for click/type by reference.
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `sessionId` | string | Target page session ID |
+| `maxDepth` | number | Max tree depth (default 10) |
+| `maxNodes` | number | Max nodes (default 500) |
+| `maxTextLength` | number | Max text per node (default 200) |
+| `viewportOnly` | boolean | Only return elements visible in viewport (default false) |
 
 ```json
 {
   "name": "vulpine_snapshot",
-  "arguments": {
-    "maxDepth": 10,
-    "maxNodes": 500
-  }
+  "arguments": { "sessionId": "sess-1", "viewportOnly": true }
+}
+```
+
+Returns compressed DOM with element refs:
+```json
+{"v":1,"title":"Example","url":"https://example.com","nodes":[
+  [0,"doc","Example"],
+  [1,"a","Home",{"hr":"/"},"@0"],
+  [1,"btn","Sign Up",null,"@1"]
+]}
+```
+
+### vulpine_click_ref
+
+Click an element by its `@ref` from the snapshot. Resolves the element's position, scrolls it into view, and dispatches mouse events.
+
+```json
+{
+  "name": "vulpine_click_ref",
+  "arguments": { "sessionId": "sess-1", "ref": "@1" }
+}
+```
+
+### vulpine_type_ref
+
+Focus an element by its `@ref` and type text into it.
+
+```json
+{
+  "name": "vulpine_type_ref",
+  "arguments": { "sessionId": "sess-1", "ref": "@0", "text": "hello world" }
+}
+```
+
+### vulpine_hover_ref
+
+Hover over an element by its `@ref`.
+
+```json
+{
+  "name": "vulpine_hover_ref",
+  "arguments": { "sessionId": "sess-1", "ref": "@2" }
+}
+```
+
+### vulpine_navigate
+
+Navigate to a URL.
+
+```json
+{
+  "name": "vulpine_navigate",
+  "arguments": { "sessionId": "sess-1", "url": "https://example.com" }
 }
 ```
 
 ### vulpine_click
 
-Click an element by CSS selector or accessibility reference.
+Click at specific pixel coordinates.
 
 ```json
 {
   "name": "vulpine_click",
-  "arguments": {
-    "selector": "#submit-button"
-  }
+  "arguments": { "sessionId": "sess-1", "x": 400, "y": 300 }
 }
 ```
 
 ### vulpine_type
 
-Type text into a focused element or a specified selector.
+Type text into the currently focused element.
 
 ```json
 {
   "name": "vulpine_type",
-  "arguments": {
-    "selector": "input[name='search']",
-    "text": "VulpineOS agent security"
-  }
+  "arguments": { "sessionId": "sess-1", "text": "search query" }
 }
 ```
 
 ### vulpine_screenshot
 
-Capture a screenshot of the current page (returns base64 PNG).
+Capture a page screenshot (returns base64 PNG).
 
 ```json
 {
   "name": "vulpine_screenshot",
-  "arguments": {
-    "fullPage": false
-  }
+  "arguments": { "sessionId": "sess-1" }
 }
 ```
 
@@ -84,16 +120,13 @@ Scroll the page by a specified amount.
 ```json
 {
   "name": "vulpine_scroll",
-  "arguments": {
-    "direction": "down",
-    "amount": 500
-  }
+  "arguments": { "sessionId": "sess-1", "deltaY": 500 }
 }
 ```
 
 ### vulpine_new_context
 
-Create a new isolated browser context. Each context has its own cookies, storage, and fingerprint.
+Create a new isolated browser context with its own cookies, storage, and fingerprint.
 
 ```json
 {
@@ -104,53 +137,46 @@ Create a new isolated browser context. Each context has its own cookies, storage
 
 ### vulpine_close_context
 
-Close a browser context and free its resources back to the pool.
+Close a browser context and release its resources.
 
 ```json
 {
   "name": "vulpine_close_context",
-  "arguments": {
-    "contextId": "ctx-a8f2"
-  }
+  "arguments": { "contextId": "ctx-a8f2" }
 }
 ```
 
 ### vulpine_get_ax_tree
 
-Get the raw accessibility tree (with injection filter applied). Use `vulpine_snapshot` instead for token efficiency — this is provided for compatibility.
+Get the raw accessibility tree (injection-filtered). Use `vulpine_snapshot` for token efficiency — this is for compatibility.
 
 ```json
 {
   "name": "vulpine_get_ax_tree",
-  "arguments": {}
+  "arguments": { "sessionId": "sess-1" }
 }
 ```
 
-## OpenClaw Configuration
+## Ref-Based Workflow
 
-VulpineOS auto-generates `~/.vulpineos/openclaw.json` with Chrome disabled and VulpineOS MCP configured:
+The recommended agent workflow:
+
+1. Call `vulpine_snapshot` to get the page DOM with `@ref` identifiers
+2. Agent reads the snapshot and decides which element to interact with
+3. Call `vulpine_click_ref` or `vulpine_type_ref` with the `@ref` — no coordinates needed
+4. Call `vulpine_snapshot` again to see the result
+
+This is more reliable than coordinate-based clicking because refs resolve to the actual DOM element, scroll it into view, and compute the center point automatically.
+
+## OpenClaw Integration
+
+VulpineOS auto-generates `~/.openclaw-vulpine/openclaw.json`. When foxbridge is available, it sets `browser.cdpUrl` so OpenClaw uses its native CDP browser tools through Camoufox:
 
 ```json
 {
   "browser": {
-    "enabled": false
-  },
-  "mcpServers": {
-    "vulpineos": {
-      "command": "/path/to/vulpineos",
-      "args": ["--mcp-server"]
-    }
+    "enabled": true,
+    "cdpUrl": "ws://localhost:9222"
   }
 }
 ```
-
-## Key Advantage
-
-The `vulpine_snapshot` tool uses Phase 3's optimized DOM export, meaning every page read by an agent automatically benefits from token compression, injection filtering, and semantic extraction — with no agent-side code changes.
-
-## Files
-
-- `internal/mcp/server.go` — stdio MCP server
-- `internal/mcp/tools.go` — tool definitions and Juggler translation
-- `internal/mcp/protocol.go` — MCP JSON-RPC 2.0 types
-- `internal/openclaw/config.go` — OpenClaw config generation
