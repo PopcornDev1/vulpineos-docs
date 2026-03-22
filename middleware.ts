@@ -5,19 +5,19 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
 
   if (hostname.startsWith('foxbridge.')) {
-    const { pathname } = request.nextUrl
+    let { pathname } = request.nextUrl
 
     // Skip static assets
     if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/favicon')) {
       return NextResponse.next()
     }
 
-    // Already has /foxbridge prefix — don't double-prefix
+    // Strip /foxbridge prefix if present (sidebar links include it)
     if (pathname.startsWith('/foxbridge')) {
-      return NextResponse.next()
+      pathname = pathname.slice('/foxbridge'.length) || '/'
     }
 
-    // Rewrite root and sub-paths to /foxbridge/*
+    // Rewrite to /foxbridge/*
     const url = request.nextUrl.clone()
     url.pathname = '/foxbridge' + pathname
     return NextResponse.rewrite(url)
