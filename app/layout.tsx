@@ -5,7 +5,7 @@ import 'nextra-theme-docs/style.css'
 
 export const metadata = {
   title: 'VulpineOS',
-  description: 'The first browser engine with AI agent security built into the C++ core.',
+  description: 'Operate Stealth and Secure OpenClaw Agents at Scale',
 }
 
 const logo = (
