@@ -37,6 +37,14 @@ export default {
   },
   docker: 'Docker (Vulpine-Box)',
   remote: 'Remote Access',
+  '---guides': {
+    title: 'Guides',
+    type: 'separator',
+  },
+  'ai-browser-agent-security': 'AI Agent Security',
+  'prevent-prompt-injection': 'Prevent Prompt Injection',
+  'openclaw-camoufox-setup': 'OpenClaw + Camoufox Setup',
+  'camoufox-vs-chrome': 'Camoufox vs Chrome',
   '---dev': {
     title: 'Development',
     type: 'separator',

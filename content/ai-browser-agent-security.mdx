@@ -1,0 +1,111 @@
+---
+title: "AI Browser Agent Security — Protect Agents from Prompt Injection and Page Manipulation"
+description: "VulpineOS provides 4 layers of security for AI browser agents: injection filtering, action lock, DOM monitoring, and sandboxed evaluation."
+---
+
+# AI Browser Agent Security
+
+AI browser agents are fundamentally vulnerable. They read web pages and take actions based on what they see — but the pages they visit can manipulate what they see. VulpineOS is the first platform to address this with browser-engine-level security.
+
+## The Threat Model
+
+### Prompt Injection via Hidden DOM
+
+Malicious websites inject invisible text into the DOM — elements with `display: none`, `opacity: 0`, positioned off-screen, or clipped with CSS. When the agent reads the page via the accessibility tree, it sees this hidden text as legitimate content. Attackers use this to:
+
+- Override the agent's system prompt
+- Redirect the agent to phishing pages
+- Exfiltrate data by instructing the agent to visit attacker-controlled URLs
+- Execute unintended purchases or form submissions
+
+### Page Mutation
+
+JavaScript timers, animations, and network callbacks change the page between when the agent reads it and when it acts. The agent clicks on a button that moved, fills a form that was replaced, or navigates a page that reloaded.
+
+### Context Window Poisoning
+
+Bloated accessibility trees waste 50-70% of the agent's context window on structural noise — wrapper divs, empty groups, redundant whitespace. This crowds out actual content and increases costs.
+
+## VulpineOS Security Stack
+
+### Layer 1: Injection-Proof Accessibility Filter
+
+VulpineOS patches Firefox's accessibility tree generation at the C++ level. Before any AI agent reads the page, 7 visibility checks strip non-visible nodes:
+
+1. `aria-hidden="true"`
+2. `display: none`
+3. `visibility: hidden/collapse`
+4. `opacity: 0`
+5. Zero dimensions with hidden overflow
+6. Off-screen by more than 500px
+7. `clip-path: inset(100%)` or `clip: rect(0,0,0,0)`
+
+These checks are ordered by computational cost and short-circuit early. The filter runs in the browser process, not JavaScript — it cannot be bypassed by page scripts.
+
+See [Injection Filter](/injection-filter) for implementation details.
+
+### Layer 2: Action Lock (Page Freeze)
+
+When enabled, Action Lock completely freezes the page while the agent is thinking:
+
+- JavaScript execution disabled (`allowJavascript = false`)
+- Refresh driver suspended (no animations, no reflow)
+- Timers and intervals paused
+- Network callbacks held
+- Event handling suppressed
+
+The page is a frozen snapshot. The agent reads it, decides, and acts — then the page unfreezes. Navigation auto-releases the lock.
+
+See [Action Lock](/action-lock) for the C++ implementation.
+
+### Layer 3: DOM Mutation Monitoring
+
+VulpineOS monitors the DOM for mutations that match injection patterns:
+
+- **13 injection signature patterns** with risk scoring
+- Hidden element insertion detection
+- Attribute changes on aria-hidden, style visibility
+- Content Security Policy header injection
+- Alert thresholds and webhook notifications
+
+See [Security Features](/security-features) for the full signature database.
+
+### Layer 4: Sandboxed Evaluation
+
+Agent JavaScript evaluations run in a restricted sandbox:
+
+- `fetch`, `XMLHttpRequest`, `WebSocket`, `sendBeacon` blocked
+- No access to cross-origin resources
+- No dynamic script injection
+- Evaluation results sanitized before returning to the agent
+
+## Comparison with Other Approaches
+
+| Security Layer | VulpineOS | Standard Browser | Post-processing |
+|----------------|-----------|-----------------|-----------------|
+| Injection filtering | C++ level, before agent sees page | None | JS-level, bypassable |
+| Page freeze | nsDocShell suspend | None | None |
+| DOM monitoring | MutationObserver + signatures | None | None |
+| Sandboxed eval | Blocked network APIs | Full access | None |
+| Detection evasion | Camoufox fingerprints | Detectable | N/A |
+
+## Getting Started
+
+```bash
+git clone https://github.com/PopcornDev1/VulpineOS
+cd VulpineOS
+make fetch && make setup && make dir && make build
+go build -o vulpineos ./cmd/vulpineos
+./vulpineos
+```
+
+The injection filter is enabled by default. Action Lock and other security features can be configured via the TUI settings or web panel.
+
+---
+
+## See also
+
+- [Injection Filter](/injection-filter) — C++ accessibility tree pruning
+- [Action Lock](/action-lock) — Page freeze during agent thinking
+- [Security Features](/security-features) — CSP, DOM monitoring, signatures, sandbox
+- [Getting Started](/getting-started) — Install and launch VulpineOS

@@ -1,0 +1,117 @@
+---
+title: "OpenClaw + Camoufox Setup — Undetectable AI Browser Agents"
+description: "Run OpenClaw AI agents on Camoufox anti-detect browser with VulpineOS. Per-agent fingerprints, injection protection, and zero bot detection."
+---
+
+# OpenClaw + Camoufox Setup
+
+This guide covers setting up OpenClaw AI agents on Camoufox (anti-detect Firefox) via VulpineOS. The result: AI agents that browse the web with unique fingerprints, zero bot detection, and protection against prompt injection.
+
+## Why Camoufox for AI Agents?
+
+OpenClaw's default browser is Chrome. Chrome is detected by every major anti-bot system:
+
+| Anti-Bot System | Chrome Detection | Camoufox Detection |
+|-----------------|-----------------|-------------------|
+| Cloudflare | Immediate | Undetected |
+| DataDome | Immediate | Undetected |
+| PerimeterX | Immediate | Undetected |
+| Akamai | Immediate | Undetected |
+
+Camoufox evades detection because:
+- `navigator.webdriver` is `false` at the C++ level (not a JavaScript override)
+- No automation markers (`$cdc_`, `HeadlessChrome`, etc.)
+- Per-context BrowserForge fingerprints (unique WebGL, canvas, audio, fonts)
+- Real browser engine (Firefox 146.0.1), not a patched Chromium
+
+## Setup Options
+
+### Option 1: VulpineOS (Recommended)
+
+VulpineOS bundles everything — Camoufox, foxbridge CDP proxy, agent management, security:
+
+```bash
+git clone https://github.com/PopcornDev1/VulpineOS
+cd VulpineOS
+make fetch && make setup && make dir && make build
+go build -o vulpineos ./cmd/vulpineos
+./vulpineos
+```
+
+VulpineOS automatically:
+- Launches Camoufox with the embedded foxbridge CDP server
+- Creates isolated contexts with unique fingerprints per agent
+- Filters hidden DOM for injection protection
+- Manages agent lifecycles, costs, and sessions
+
+### Option 2: Standalone Foxbridge
+
+If you want just the CDP bridge without VulpineOS management:
+
+```bash
+# Install foxbridge
+go install github.com/PopcornDev1/foxbridge/cmd/foxbridge@latest
+
+# Start with Camoufox
+foxbridge --binary /path/to/camoufox --port 9222 --headless
+```
+
+Configure OpenClaw:
+```json
+{
+  "browser": {
+    "cdpUrl": "ws://127.0.0.1:9222",
+    "enabled": true,
+    "headless": true
+  }
+}
+```
+
+## Multi-Agent with Unique Fingerprints
+
+Each agent in VulpineOS gets its own browser context with a unique identity from BrowserForge:
+
+- **User Agent** — OS-matched, realistic version strings
+- **Screen** — unique resolution and color depth
+- **WebGL** — renderer and vendor from a database of 147 real GPU parameters
+- **Canvas** — unique pixel-level fingerprint via seeds
+- **Audio** — unique AudioContext fingerprint
+- **Fonts** — OS-matched font enumeration
+- **Navigator** — hardwareConcurrency, deviceMemory, platform
+
+VulpineOS creates these automatically when spawning agents. No manual configuration needed.
+
+## Architecture
+
+```
+VulpineOS Go Binary
+  ├── Orchestrator (agent lifecycle)
+  ├── Context Pool (pre-warmed, max 20 concurrent)
+  ├── Vault (SQLite — identities, cookies, sessions)
+  ├── Embedded Foxbridge CDP (:9222)
+  │     └── OpenClaw connects here
+  └── Camoufox (single process)
+        └── Per-agent contexts with unique fingerprints
+```
+
+One Camoufox process serves all agents. Each agent gets an isolated context with its own cookies, storage, and fingerprint. Memory usage: ~10-15MB per context vs Chrome's 50-80MB.
+
+## Security
+
+VulpineOS protects agents from web-based attacks:
+
+- **Injection Filter** — strips hidden DOM before agents read pages
+- **Action Lock** — freezes pages during agent thinking
+- **DOM Monitoring** — detects mutation attacks in real-time
+- **Sandboxed Eval** — blocks fetch/XHR/WebSocket in agent JS
+- **CSP Injection** — restricts what pages can load
+
+---
+
+## See also
+
+- [Getting Started](/getting-started) — Full installation guide
+- [Injection Filter](/injection-filter) — How injection protection works
+- [Foxbridge](/foxbridge) — CDP proxy details
+- [Cost Tracking](/cost-tracking) — Per-agent budget management
+- [Architecture](/architecture) — Full system architecture

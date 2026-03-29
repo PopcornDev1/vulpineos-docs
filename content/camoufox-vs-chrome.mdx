@@ -1,0 +1,124 @@
+---
+title: "Camoufox vs Chrome for Browser Automation — Anti-Detect Comparison"
+description: "Compare Camoufox and Chrome for AI agent browser automation. Fingerprinting, bot detection, memory usage, and CDP compatibility."
+---
+
+# Camoufox vs Chrome for Browser Automation
+
+Chrome is the default choice for browser automation, but it's fundamentally flawed for AI agents that need to browse real websites without being blocked. This comparison explains why Camoufox with foxbridge is the better choice.
+
+## Detection
+
+| Test | Chrome (Headless) | Chrome (Headed) | Camoufox |
+|------|-------------------|-----------------|----------|
+| `navigator.webdriver` | `true` | `true` (unless patched in JS) | `false` (C++ level) |
+| HeadlessChrome UA | Present | Absent | N/A (Firefox UA) |
+| `$cdc_` markers | Present | Present | Absent (not Chromium) |
+| WebGL fingerprint | Same for all tabs | Same for all tabs | Unique per context |
+| Canvas fingerprint | Same for all tabs | Same for all tabs | Unique per context |
+| Cloudflare | Blocked | Often blocked | Passes |
+| DataDome | Blocked | Often blocked | Passes |
+
+### Why Chrome Gets Detected
+
+Chrome's automation markers are baked into the browser binary:
+- `navigator.webdriver = true` is set in the DevTools protocol handler
+- JavaScript patches (`Object.defineProperty`) are detectable via prototype checks
+- `$cdc_` variables are injected by ChromeDriver/CDP
+- All browser contexts share identical WebGL/canvas fingerprints
+- Headless mode has a different rendering pipeline that sites can detect
+
+### Why Camoufox Evades Detection
+
+Camoufox is a Firefox fork with C++ level patches:
+- `navigator.webdriver = false` is the compiled default, not a runtime override
+- No CDP markers (Camoufox uses Juggler, not Chrome's DevTools)
+- Each browser context gets unique fingerprints from BrowserForge
+- Same rendering pipeline in headless and headed modes
+- Real Firefox engine — sites see a normal Firefox browser
+
+## Memory
+
+| Metric | Chrome | Camoufox |
+|--------|--------|----------|
+| Base process | ~150MB | ~200MB |
+| Per context | 50-80MB | 10-15MB |
+| 10 contexts | 650-950MB | 300-350MB |
+| 50 contexts | 2.6-4.1GB | 700-950MB |
+
+At scale, Camoufox uses 3-4x less memory. This is because Firefox shares more resources between contexts than Chrome's multi-process architecture.
+
+## CDP Compatibility
+
+Chrome supports CDP natively. Camoufox requires [foxbridge](https://foxbridge.vulpineos.com) to translate CDP:
+
+| Feature | Chrome | Camoufox + Foxbridge |
+|---------|--------|---------------------|
+| Puppeteer | Native | 74/74 tests passing |
+| OpenClaw | Native | Full support |
+| Request interception | Native | Full (Fetch domain) |
+| Screenshots | Native | Full |
+| PDF generation | Native | Full (IO streaming) |
+| $eval / $$eval | Native | Full |
+| Device emulation | Native | Full |
+| Performance metrics | Native | Full |
+
+Foxbridge achieves feature parity. The only difference is the proxy adds ~1ms of latency per command.
+
+## Per-Context Fingerprints
+
+This is Camoufox's killer feature for multi-agent setups:
+
+```javascript
+// Chrome — all contexts are identical
+const ctx1 = await chromeBrowser.createBrowserContext();
+const ctx2 = await chromeBrowser.createBrowserContext();
+// Same WebGL hash, same canvas fingerprint, same UA
+
+// Camoufox — each context has a unique identity
+const ctx1 = await camoufoxBrowser.createBrowserContext();
+const ctx2 = await camoufoxBrowser.createBrowserContext();
+// Different WebGL, different canvas, different UA, different fonts
+```
+
+For AI agents, this means each agent appears as a completely different user. Sites cannot correlate agents by fingerprint.
+
+## When to Use Chrome
+
+- Internal tools where bot detection doesn't matter
+- Testing your own websites
+- When you need Chrome-specific APIs (e.g., Chrome extensions)
+
+## When to Use Camoufox
+
+- AI agents browsing real websites
+- Web scraping at scale
+- Any automation that hits sites with anti-bot protection
+- Multi-agent setups needing unique identities
+- Production agents that need to stay undetected
+
+## Getting Started
+
+```bash
+# Install foxbridge
+go install github.com/PopcornDev1/foxbridge/cmd/foxbridge@latest
+
+# Start with Camoufox
+foxbridge --binary /path/to/camoufox --port 9222 --headless
+
+# Connect Puppeteer
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'ws://127.0.0.1:9222/devtools/browser/foxbridge'
+});
+```
+
+For full agent management, use [VulpineOS](https://vulpineos.com) — it embeds foxbridge and handles fingerprints, security, and orchestration automatically.
+
+---
+
+## See also
+
+- [Getting Started](/getting-started) — Install VulpineOS
+- [Injection Filter](/injection-filter) — Security beyond stealth
+- [Foxbridge](/foxbridge) — CDP proxy for Camoufox
+- [Architecture](/architecture) — Full VulpineOS stack
