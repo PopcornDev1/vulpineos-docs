@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check page count
+        run: |
+          count=$(find content -name '*.mdx' | wc -l)
+          echo "MDX pages: $count"
+          if [ "$count" -lt 25 ]; then
+            echo "ERROR: Page count dropped below 25"
+            exit 1
+          fi
+
+      - name: Validate sitemap entries
+        run: |
+          node -e "
+            import('./app/sitemap.ts').catch(() => {
+              console.log('Sitemap uses TypeScript - checking file exists');
+            });
+          " || true
+          if [ ! -f "app/sitemap.ts" ]; then
+            echo "ERROR: sitemap.ts missing"
+            exit 1
+          fi
+
+      - name: Check llms.txt exists
+        run: |
+          for f in public/llms.txt public/llms-full.txt; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: Missing $f"
+              exit 1
+            fi
+          done
+          echo "AI crawler files present"

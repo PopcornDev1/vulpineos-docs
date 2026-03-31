@@ -1,0 +1,28 @@
+# VulpineOS Documentation
+
+Documentation site for [VulpineOS](https://github.com/PopcornDev1/VulpineOS) — the operating system for AI browser agents.
+
+**Live site:** [vulpineos.com](https://vulpineos.com)
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Stack
+
+- [Next.js](https://nextjs.org) 16
+- [Nextra](https://nextra.site) 4
+- Deployed on [Vercel](https://vercel.com)
+
+## Content
+
+29 MDX pages covering:
+- 4 browser engine security phases
+- 12 MCP browser tools
+- Web panel, TUI, remote access, Docker
+- Token optimization, agent scripting, cost tracking
+- Foxbridge CDP proxy integration
+- SEO: sitemaps, OG images, JSON-LD, llms.txt
