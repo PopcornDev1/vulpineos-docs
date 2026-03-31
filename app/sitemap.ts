@@ -28,6 +28,10 @@ const pages = [
   '/foxbridge/bidi-backend',
   '/foxbridge/cli-reference',
   '/contributing',
+  '/ai-browser-agent-security',
+  '/prevent-prompt-injection',
+  '/openclaw-camoufox-setup',
+  '/camoufox-vs-chrome',
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
