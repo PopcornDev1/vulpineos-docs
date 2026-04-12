@@ -20,7 +20,7 @@ VulpineOS solves the three critical problems with AI browser agents:
 - **Token Optimization**: Viewport pruning, result caching, incremental snapshots, tool call batching.
 - **Agent Scripting DSL**: JSON-based browser automation without LLM calls.
 - **MCP Tools**: 36 browser, reliability, human-realism, extension, and Android mobile bridge tools.
-- **Vulpine API Features**: Public product surface for Vulpine Vault, AudioBridge, MobileBridge, Vulpine Mark, and hosted extraction.
+- **Vulpine API Features**: Public product surface for Vulpine Vault, AudioBridge, MobileBridge, Vulpine Mark, hosted extraction, recurring monitors, and planned commercial products.
 - **Cost Tracking**: Per-agent token/cost budgets with alerts.
 - **Embedded Foxbridge**: CDP proxy shares single Camoufox instance — OpenClaw controls Firefox as if it were Chrome.
 - **Context Pool**: Pre-warm 10 contexts, max 20 concurrent, auto-recycle.
@@ -29,6 +29,14 @@ VulpineOS solves the three critical problems with AI browser agents:
 - **Agent-to-Agent Communication**: Message bus with approval policies.
 - **Session Recording**: Record and replay browser action timelines.
 - **Remote Deployment**: TLS WebSocket server, Docker container.
+
+## Vulpine API Product Surface
+
+Open source components: VulpineOS, Foxbridge, Vulpine Mark, and MobileBridge for Android.
+
+Source-closed commercial surfaces: Vulpine Vault, AudioBridge, MobileBridge for iOS, and Vulpine API. Current Vulpine API endpoints cover extraction, batch extraction, async tasks, extraction history, recurring monitors, usage, API keys, and provider listing. Extraction accepts JSON Schema or natural-language prompts, supports sync and async execution, can opt into pagination, and returns usage metadata.
+
+Planned commercial products: Vulpine Sentinel (stealth health monitoring), Vulpine Replay (deterministic debugging and audit bundles), Vulpine Clockwork (mid-session identity rotation), Vulpine Prism (managed third-party behavior controls), Vulpine Pulse (human behavior modeling), Vulpine Forge (WASM-heavy app automation), Vulpine Scribe (deep network traces), Vulpine Harbor (virtual file workspace), Vulpine Mesh (high-throughput browser-agent transport), and Vulpine Oracle (JavaScript execution recording). These are public product names; source code and implementation details remain source-closed unless explicitly noted.
 
 ## How It Works
 

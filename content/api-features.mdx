@@ -23,7 +23,50 @@ Vulpine API packages the VulpineOS browser-agent stack into commercial endpoints
 | Vulpine Vault | Source-closed | Credential metadata, autofill, secure input, TOTP, and provider imports |
 | AudioBridge | Source-closed | Browser audio capture sessions and audio chunk streaming |
 | MobileBridge for iOS | Source-closed | iOS device discovery, Web Inspector bridging, and mobile sessions |
-| Vulpine API | Source-closed | Hosted extraction, browser sessions, account operations, billing, and fleet controls |
+| Vulpine API | Source-closed | Hosted extraction, browser sessions, recurring monitors, account operations, billing, and fleet controls |
+
+## Current Vulpine API Endpoints
+
+The hosted API is the commercial surface for teams that want VulpineOS capabilities without running their own browser fleet.
+
+| Area | Endpoints | Status |
+|------|-----------|--------|
+| Extraction | `POST /v1/extract`, `POST /v1/batch` | Available in the API service |
+| Async tasks | `GET /v1/tasks/{id}`, `POST /v1/tasks/{id}/cancel`, `GET /v1/extractions` | Available in the API service |
+| Recurring monitors | `POST /v1/monitor`, `GET /v1/monitors`, `DELETE /v1/monitors/{id}` | Available in the API service |
+| Account and usage | `GET /v1/usage`, `GET /v1/keys`, `POST /v1/keys`, `GET /v1/providers` | Available in the API service |
+
+Extraction accepts a JSON Schema or natural-language prompt, supports sync and async execution, can opt into pagination, and returns usage metadata such as completeness, token count, retries, and estimated cost.
+
+## Planned Commercial Products
+
+These product names are public roadmap language. Their source code and implementation details are source-closed unless a row explicitly says otherwise.
+
+| Product | Source | What It Is |
+|---------|--------|------------|
+| Vulpine Sentinel | Source-closed | Stealth health monitoring for browser-agent fleets, with per-session risk scoring and alerting |
+| Vulpine Replay | Mixed | Deterministic browser replay for debugging and audit trails; the bundle format may be public, while high-fidelity recording remains commercial |
+| Vulpine Clockwork | Source-closed | Mid-session identity rotation for long-running browser sessions without discarding session state |
+| Vulpine Prism | Source-closed | Controlled handling of third-party detection and tracker behavior for managed fleet environments |
+| Vulpine Pulse | Source-closed | Engine-level human behavior modeling for clicks, typing, scrolling, and dwell timing |
+| Vulpine Forge | Source-closed with possible public adapters | Automation surface for complex WebAssembly-heavy web apps |
+| Vulpine Scribe | Mixed | Deep network trace format and runtime request diagnostics; trace formats may be public, capture implementation remains commercial |
+| Vulpine Harbor | Source-closed | Per-citizen virtual file workspace for downloads, uploads, file forms, and document handling |
+| Vulpine Mesh | Source-closed | High-throughput browser-to-agent data transport for screenshots, audio, replay frames, and large snapshots |
+| Vulpine Oracle | Source-closed | JavaScript execution recording and analysis for deterministic debugging and agent reliability |
+
+## Planned API Feature Families
+
+These are candidate hosted API surfaces that build on the open-source runtime plus commercial extensions:
+
+| API Feature | Depends On | Public Description |
+|-------------|------------|--------------------|
+| Authenticated extraction | Vulpine Vault | Run extraction behind login flows using stored credentials and audit-friendly autofill |
+| Visual extraction | Vulpine Mark | Return labeled screenshots and element tables for VLM and computer-use workflows |
+| Browser audio workflows | AudioBridge | Capture tab audio for transcripts, audio challenge handling, and voice-based pages |
+| Mobile extraction | MobileBridge | Extract from Android browsers today, with source-closed iOS support planned for managed environments |
+| Protected crawl | Vulpine Vault, Vulpine Mark | Crawl authenticated sites with session refresh, change detection, and per-page audit trails |
+| Recurring monitors | Vulpine API | Schedule repeated extractions and receive webhook updates when monitored data changes |
 
 ## MCP Mapping
 

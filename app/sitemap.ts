@@ -12,6 +12,7 @@ const pages = [
   '/optimized-dom',
   '/trust-warming',
   '/mcp-tools',
+  '/api-features',
   '/tui',
   '/web-panel',
   '/remote',
