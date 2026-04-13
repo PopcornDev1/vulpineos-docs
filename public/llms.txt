@@ -21,6 +21,7 @@ VulpineOS solves the three critical problems with AI browser agents:
 - **Agent Scripting DSL**: JSON-based browser automation without LLM calls.
 - **MCP Tools**: 36 browser, reliability, human-realism, extension, and Android mobile bridge tools.
 - **Vulpine API Features**: Public product surface for Vulpine Vault, AudioBridge, MobileBridge, Vulpine Mark, hosted extraction, recurring monitors, and planned commercial products.
+- **Source Availability**: Open-source VulpineOS, Vulpine Mark, Android MobileBridge, Foxbridge, and docs; source-closed Vulpine API, Vulpine Vault, AudioBridge, iOS MobileBridge, and planned commercial products.
 - **Cost Tracking**: Per-agent token/cost budgets with alerts.
 - **Embedded Foxbridge**: CDP proxy shares single Camoufox instance — OpenClaw controls Firefox as if it were Chrome.
 - **Context Pool**: Pre-warm 10 contexts, max 20 concurrent, auto-recycle.

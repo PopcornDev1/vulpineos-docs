@@ -2,7 +2,7 @@
 
 > Operate Stealth and Secure OpenClaw Agents at Scale
 
-VulpineOS is the operating system for AI browser agents. Built on Camoufox (a hardened Firefox 146.0.1 fork originally created by daijro), it manages hundreds of OpenClaw agents with unique identities, full security, and zero detection. VulpineOS ships as a single Go binary with 36 packages, an embedded web panel, an embedded foxbridge CDP server, and a terminal-based TUI — all sharing a single Camoufox browser process.
+VulpineOS is the operating system for AI browser agents. Built on Camoufox (a hardened Firefox 146.0.1 fork originally created by daijro), it manages hundreds of OpenClaw agents with unique identities, full security, and zero detection. VulpineOS ships as a single Go binary with 37 packages, an embedded web panel, an embedded foxbridge CDP server, and a terminal-based TUI — all sharing a single Camoufox browser process.
 
 - Documentation: https://docs.vulpineos.com
 - Repository: https://github.com/PopcornDev1/VulpineOS
@@ -382,7 +382,7 @@ JSON structured logger with levels (Debug/Info/Warn/Error), component tags, fiel
 
 ## Testing
 
-350+ Go tests across 36 packages, all passing with race detector. 29 API endpoints verified. 11 web panel pages. Full OpenClaw integration tested end-to-end. Foxbridge: 74/74 Juggler Puppeteer tests, 62/62 BiDi tests, 227 Go unit tests.
+350+ Go tests across 37 packages, all passing with race detector. 29 API endpoints verified. 11 web panel pages. Full OpenClaw integration tested end-to-end. Foxbridge: 74/74 Juggler Puppeteer tests, 62/62 BiDi tests, 227 Go unit tests.
 
 ---
 

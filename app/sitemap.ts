@@ -13,6 +13,7 @@ const pages = [
   '/trust-warming',
   '/mcp-tools',
   '/api-features',
+  '/source-availability',
   '/tui',
   '/web-panel',
   '/remote',

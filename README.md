@@ -19,7 +19,7 @@ npm run dev
 
 ## Content
 
-30 MDX pages covering:
+31 MDX pages covering:
 - 4 browser engine security phases
 - 36 MCP browser, reliability, realism, and extension tools
 - Web panel, TUI, remote access, Docker

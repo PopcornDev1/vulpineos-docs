@@ -31,6 +31,7 @@ export default {
   tui: 'TUI Workbench',
   'mcp-tools': 'MCP Tools',
   'api-features': 'Vulpine API Features',
+  'source-availability': 'Source Availability',
   foxbridge: 'Foxbridge CDP Proxy',
   '---deploy': {
     title: 'Deployment',

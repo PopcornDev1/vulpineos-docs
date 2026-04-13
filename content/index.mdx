@@ -64,6 +64,7 @@ Beyond the browser engine security phases, VulpineOS is a complete agent managem
 | [Foxbridge CDP Proxy](/foxbridge) | Embedded CDP server — OpenClaw controls Camoufox as if it were Chrome |
 | [MCP Browser Tools](/mcp-tools) | 36 tools for browser control, reliability checks, human-like actions, extension surfaces, and Android device bridging |
 | [Vulpine API Features](/api-features) | Public product surface for Vulpine Vault, AudioBridge, MobileBridge, Vulpine Mark, hosted extraction, recurring monitors, and planned commercial products |
+| [Source Availability](/source-availability) | Which products are open source, which are source-closed, and how commercial features connect to public interfaces |
 | [Remote Access](/remote) | TLS WebSocket server for headless VPS deployment |
 | [Docker](/docker) | One-click container with Vulpine-Box |
 | Per-Agent Fingerprints | BrowserForge pipeline — unique UA, screen, WebGL, canvas/audio seeds per agent |
@@ -76,7 +77,7 @@ Beyond the browser engine security phases, VulpineOS is a complete agent managem
 
 ## Architecture
 
-VulpineOS ships as a single Go binary with 36 packages, an embedded web panel, and an embedded foxbridge CDP server — all sharing a single Camoufox instance:
+VulpineOS ships as a single Go binary with 37 packages, an embedded web panel, and an embedded foxbridge CDP server — all sharing a single Camoufox instance:
 
 ```
 ┌─────────────────────────────────────────┐
@@ -110,3 +111,4 @@ VulpineOS is a personal project by Elliot, forked from [Camoufox](https://github
 - [Injection-Proof Filter](/injection-filter) — how VulpineOS blocks prompt injection
 - [MCP Browser Tools](/mcp-tools) — 36 tools for AI agent browser control
 - [Foxbridge CDP Proxy](/foxbridge) — embedded CDP server for OpenClaw
+- [Source Availability](/source-availability) — open-source and source-closed product boundaries
