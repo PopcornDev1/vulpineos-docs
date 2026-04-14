@@ -5,8 +5,8 @@
 VulpineOS is the operating system for AI browser agents. Built on Camoufox (a hardened Firefox 146.0.1 fork originally created by daijro), it manages hundreds of OpenClaw agents with unique identities, full security, and zero detection. VulpineOS ships as a single Go binary with 37 packages, an embedded web panel, an embedded foxbridge CDP server, and a terminal-based TUI — all sharing a single Camoufox browser process.
 
 - Documentation: https://docs.vulpineos.com
-- Repository: https://github.com/PopcornDev1/VulpineOS
-- Foxbridge: https://github.com/PopcornDev1/foxbridge
+- Repository: https://github.com/VulpineOS/VulpineOS
+- Foxbridge: https://github.com/VulpineOS/foxbridge
 - Foxbridge Docs: https://foxbridge.vulpineos.com
 
 ---
@@ -270,7 +270,7 @@ Juggler events translated to CDP events in Chrome's exact ordering. Navigation l
 ### CLI
 `foxbridge --binary /path/to/camoufox --port 9222` (Juggler) or `foxbridge --backend bidi --binary /path/to/firefox --port 9222` (BiDi). HTTP discovery at `/json/version` and `/json/list`.
 
-Repository: https://github.com/PopcornDev1/foxbridge
+Repository: https://github.com/VulpineOS/foxbridge
 
 ---
 

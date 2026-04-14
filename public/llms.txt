@@ -57,19 +57,19 @@ Web Panel / TUI / MCP Tools
 Foxbridge is a CDP-to-Firefox protocol proxy. It translates Chrome DevTools Protocol to Firefox's Juggler or WebDriver BiDi protocols. This lets OpenClaw, Puppeteer, and any CDP tool control Camoufox without modification.
 
 - Foxbridge docs: https://foxbridge.vulpineos.com
-- Foxbridge repo: https://github.com/PopcornDev1/foxbridge
+- Foxbridge repo: https://github.com/VulpineOS/foxbridge
 
 ## Links
 
 - Documentation: https://docs.vulpineos.com
 - API Reference: https://docs.vulpineos.com/api-reference
-- Repository: https://github.com/PopcornDev1/VulpineOS
+- Repository: https://github.com/VulpineOS/VulpineOS
 - Foxbridge: https://foxbridge.vulpineos.com
 
 ## Common Questions
 
 **How do I use Puppeteer with Firefox?**
-Install foxbridge (`go install github.com/PopcornDev1/foxbridge/cmd/foxbridge@latest`), run it with `--binary /path/to/firefox`, then connect Puppeteer to `ws://localhost:9222`.
+Install foxbridge (`go install github.com/VulpineOS/foxbridge/cmd/foxbridge@latest`), run it with `--binary /path/to/firefox`, then connect Puppeteer to `ws://localhost:9222`.
 
 **How do I make OpenClaw use Camoufox instead of Chrome?**
 Set `"cdpUrl": "ws://127.0.0.1:9222"` in your openclaw.json. VulpineOS does this automatically.
