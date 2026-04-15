@@ -1,6 +1,6 @@
 ---
 title: "Vulpine API Reference"
-description: "Vulpine API endpoint reference for extraction, async tasks, monitors, usage, API keys, providers, and batch jobs."
+description: "Vulpine API endpoint reference for extraction, authenticated and visual workflows, audio capture and transcription, mobile sessions, async tasks, monitors, and account operations."
 ---
 
 # Vulpine API Reference
@@ -36,7 +36,25 @@ The health endpoint is public.
 | `GET` | `/health` | No | Service health |
 | `GET` | `/v1/providers` | No | Available LLM providers and models |
 | `POST` | `/v1/extract` | Yes | Extract structured data from one URL |
+| `POST` | `/v1/extract/authenticated` | Yes | Extract from a logged-in page using a stored credential reference |
+| `POST` | `/v1/visual` | Yes | Run visual extraction and return labeled screenshot metadata |
 | `POST` | `/v1/batch` | Yes | Queue batch extraction jobs |
+| `GET` | `/v1/audio/captures` | Yes | List active browser audio capture sessions |
+| `POST` | `/v1/audio/captures` | Yes | Start a browser audio capture session |
+| `GET` | `/v1/audio/captures/{id}/chunk` | Yes | Read a base64-encoded audio chunk from a capture |
+| `POST` | `/v1/audio/captures/{id}/stop` | Yes | Stop a browser audio capture session |
+| `POST` | `/v1/audio/captures/{id}/transcription/start` | Yes | Start transcription for a capture |
+| `POST` | `/v1/audio/captures/{id}/transcription/stop` | Yes | Stop transcription for a capture |
+| `GET` | `/v1/audio/captures/{id}/transcription/events` | Yes | List transcript events for a capture |
+| `GET` | `/v1/mobile/devices` | Yes | List Android and iOS devices visible to the bridge host |
+| `GET` | `/v1/mobile/devices/{platform}/{id}/targets` | Yes | List inspectable targets for a device |
+| `GET` | `/v1/mobile/sessions` | Yes | List attached mobile sessions |
+| `POST` | `/v1/mobile/sessions` | Yes | Allocate an attached mobile session |
+| `DELETE` | `/v1/mobile/sessions/{id}` | Yes | Release an attached mobile session |
+| `POST` | `/v1/mobile/sessions/{id}/targets` | Yes | Open a new target on a supported session |
+| `POST` | `/v1/mobile/sessions/{id}/recording/start` | Yes | Start Android screen recording |
+| `POST` | `/v1/mobile/sessions/{id}/recording/stop` | Yes | Stop Android screen recording |
+| `GET` | `/v1/mobile/recordings/{id}/content` | Yes | Download a completed mobile recording |
 | `GET` | `/v1/extractions` | Yes | List extraction history |
 | `GET` | `/v1/tasks/{id}` | Yes | Poll an async task |
 | `POST` | `/v1/tasks/{id}/cancel` | Yes | Cancel a queued/running task |
@@ -121,6 +139,43 @@ Response shape:
 
 Partial responses keep the same shape with `status: "partial"` and metadata explaining missing fields or retry behavior.
 
+## Authenticated Extract
+
+```http
+POST /v1/extract/authenticated
+```
+
+Use this when the target is behind login and the tenant has a stored credential reference.
+
+```json
+{
+  "url": "https://example.com/account",
+  "credential_ref": "cred_123",
+  "prompt": "Extract the current account balance and available credit.",
+  "session_name": "billing-account"
+}
+```
+
+This endpoint requires a paid plan plus private vault/browser wiring.
+
+## Visual Extract
+
+```http
+POST /v1/visual
+```
+
+Returns labeled screenshot data plus structured visual element metadata for browser-backed extraction flows.
+
+```json
+{
+  "url": "https://example.com/pricing",
+  "instruction": "Label the pricing cards and primary CTA.",
+  "include_screenshot": true
+}
+```
+
+This endpoint requires a paid plan and browser integration.
+
 ## Batch
 
 ```http
@@ -154,6 +209,100 @@ Response:
   ]
 }
 ```
+
+## Audio Capture
+
+```http
+POST /v1/audio/captures
+```
+
+Start browser audio capture:
+
+```json
+{
+  "format": "pcm",
+  "sample_rate": 16000,
+  "channels": 1
+}
+```
+
+Read the next chunk:
+
+```http
+GET /v1/audio/captures/{id}/chunk?max_bytes=65536
+```
+
+Stop the capture:
+
+```http
+POST /v1/audio/captures/{id}/stop
+```
+
+These endpoints require a paid plan and private AudioBridge wiring.
+
+## Audio Transcription
+
+Start transcription for an active capture:
+
+```http
+POST /v1/audio/captures/{id}/transcription/start
+```
+
+Read transcript events:
+
+```http
+GET /v1/audio/captures/{id}/transcription/events
+```
+
+Stop transcription:
+
+```http
+POST /v1/audio/captures/{id}/transcription/stop
+```
+
+The transcription surface depends on a configured provider and returns `transcription_unavailable` if no provider is attached.
+
+## Mobile Devices and Sessions
+
+List visible devices:
+
+```http
+GET /v1/mobile/devices
+```
+
+Allocate a session:
+
+```http
+POST /v1/mobile/sessions
+```
+
+```json
+{
+  "platform": "android",
+  "device_id": "emulator-5554"
+}
+```
+
+Open a new target on a supported session:
+
+```http
+POST /v1/mobile/sessions/{id}/targets
+```
+
+Start or stop Android recording:
+
+```http
+POST /v1/mobile/sessions/{id}/recording/start
+POST /v1/mobile/sessions/{id}/recording/stop
+```
+
+Download a completed recording:
+
+```http
+GET /v1/mobile/recordings/{id}/content
+```
+
+Android sessions expose CDP-backed actions today. iOS sessions expose inventory and attached session flows, with capability differences reflected in responses.
 
 ## Tasks
 
