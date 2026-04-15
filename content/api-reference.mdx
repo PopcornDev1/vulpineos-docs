@@ -50,6 +50,7 @@ The health endpoint is public.
 | `POST` | `/v1/audio/captures/{id}/transcription/start` | Yes | Start transcription for a capture |
 | `POST` | `/v1/audio/captures/{id}/transcription/stop` | Yes | Stop transcription for a capture |
 | `GET` | `/v1/audio/captures/{id}/transcription/events` | Yes | List transcript events for a capture |
+| `GET` | `/v1/audio/captures/{id}/transcription/content` | Yes | Download merged transcript text or structured transcript JSON |
 | `GET` | `/v1/audio/captures/{id}/transcription/stream` | Yes | Stream live transcript updates over SSE |
 | `GET` | `/v1/mobile/devices` | Yes | List Android and iOS devices plus health and registry state visible to the bridge host |
 | `GET` | `/v1/mobile/workers` | Yes | List hosted mobile workers registered with the control plane |
@@ -305,6 +306,13 @@ Read transcript events:
 GET /v1/audio/captures/{id}/transcription/events
 ```
 
+Download merged transcript text or the structured session-plus-events export:
+
+```http
+GET /v1/audio/captures/{id}/transcription/content?format=text
+GET /v1/audio/captures/{id}/transcription/content?format=json
+```
+
 Stream live transcript updates with SSE:
 
 ```http
@@ -318,7 +326,7 @@ POST /v1/audio/captures/{id}/transcription/stop
 ```
 
 The transcription surface depends on a configured provider and returns `transcription_unavailable` if no provider is attached.
-Completed or interrupted transcript event history remains queryable after API restarts, and the session list includes merged transcript preview text for quick scanning.
+Completed or interrupted transcript event history remains queryable after API restarts, and the session list includes merged transcript preview text for quick scanning. The export endpoint returns either plain text for downstream captioning/search pipelines or the structured JSON envelope used by the dashboard and SDKs.
 
 ## Mobile Devices and Sessions
 
