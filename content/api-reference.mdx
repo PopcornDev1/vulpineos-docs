@@ -35,6 +35,7 @@ The health endpoint is public.
 |--------|------|------|---------|
 | `GET` | `/health` | No | Service health |
 | `GET` | `/v1/providers` | No | Available LLM providers and models |
+| `GET` | `/v1/system/metrics` | Yes | Request, error, backlog, and worker-health metrics |
 | `POST` | `/v1/extract` | Yes | Extract structured data from one URL |
 | `POST` | `/v1/extract/authenticated` | Yes | Extract from a logged-in page using a stored credential reference and expiring saved sessions |
 | `GET` | `/v1/auth/sessions` | Yes | List saved authenticated browser sessions |
