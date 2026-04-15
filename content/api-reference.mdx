@@ -248,6 +248,11 @@ List persisted transcription sessions:
 GET /v1/audio/transcriptions
 ```
 
+Optional query parameters:
+
+- `status=active|completed|failed|stopped|interrupted`
+- `q=search text`
+
 Start transcription for an active capture:
 
 ```http
