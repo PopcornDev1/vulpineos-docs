@@ -427,6 +427,8 @@ GET /v1/extractions
 
 Returns recent extraction tasks and metadata for the authenticated tenant.
 
+Failed rows include both the raw `error` string and a normalized `failure` object with `family`, `retry_class`, `retryable`, and `operator_hint` fields so operators can distinguish immediate retries from configuration or quota issues.
+
 ## Usage
 
 ```http
