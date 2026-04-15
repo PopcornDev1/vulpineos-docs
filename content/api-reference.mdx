@@ -429,6 +429,8 @@ Returns recent extraction tasks and metadata for the authenticated tenant.
 
 Failed rows include both the raw `error` string and a normalized `failure` object with `family`, `retry_class`, `retryable`, and `operator_hint` fields so operators can distinguish immediate retries from configuration or quota issues.
 
+When async retry is active, the same responses also include `attempts`, `async_retries`, and `last_retry_reason` fields so tenant tooling can see whether a task has been retried and why.
+
 ## Usage
 
 ```http
