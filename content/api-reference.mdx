@@ -53,6 +53,7 @@ The health endpoint is public.
 | `GET` | `/v1/mobile/sessions` | Yes | List attached and recently finalized mobile session leases |
 | `POST` | `/v1/mobile/sessions` | Yes | Allocate an attached mobile session |
 | `DELETE` | `/v1/mobile/sessions/{id}` | Yes | Release an attached mobile session |
+| `POST` | `/v1/mobile/sessions/{id}/renew` | Yes | Renew an attached mobile session lease |
 | `POST` | `/v1/mobile/sessions/{id}/targets` | Yes | Open a new target on a supported session |
 | `POST` | `/v1/mobile/sessions/{id}/recording/start` | Yes | Start Android screen recording |
 | `POST` | `/v1/mobile/sessions/{id}/recording/stop` | Yes | Stop Android screen recording |
@@ -321,6 +322,12 @@ Hosted worker registry data is reconciled before listing or allocation.
 Workers that stop heartbeating move to stale state, attached
 `worker_control` sessions on those devices are expired, and very old worker
 rows are pruned from the registry entirely.
+
+Long-lived CDP clients can keep a lease alive explicitly with:
+
+```http
+POST /v1/mobile/sessions/{id}/renew
+```
 
 Worker heartbeats can also report `active_sessions`, `queue_depth`,
 `max_sessions`, `failure_rate`, and `last_error`. The control plane
