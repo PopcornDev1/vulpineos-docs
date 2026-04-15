@@ -65,8 +65,8 @@ The health endpoint is public.
 | `GET` | `/v1/tasks/{id}` | Yes | Poll an async task |
 | `POST` | `/v1/tasks/{id}/cancel` | Yes | Cancel a queued/running task |
 | `GET` | `/v1/usage` | Yes | Current usage and cost metadata |
-| `GET` | `/v1/keys` | Yes | List API keys |
-| `POST` | `/v1/keys` | Yes | Create an API key |
+| `GET` | `/v1/keys` | Yes | List API keys and their scopes |
+| `POST` | `/v1/keys` | Yes | Create an API key with explicit scopes |
 | `POST` | `/v1/monitor` | Yes | Create a recurring extraction monitor |
 | `GET` | `/v1/monitors` | Yes | List monitors |
 | `DELETE` | `/v1/monitors/{id}` | Yes | Delete a monitor |
@@ -435,11 +435,12 @@ POST /v1/keys
 
 ```json
 {
-  "name": "Production worker"
+  "name": "Production worker",
+  "scopes": ["read", "write"]
 }
 ```
 
-Key creation returns the secret once. Store it immediately.
+Key creation returns the secret once. Store it immediately. Supported scopes are `admin`, `write`, `read`, `mobile`, and `audio`. Existing legacy keys continue to behave as full-access keys until rotated or replaced.
 
 ## Providers
 
