@@ -358,6 +358,11 @@ sessions that can be attached remotely through the control plane. iOS
 sessions expose inventory and attached session flows, with capability
 difference reflected in responses.
 
+Completed recording artifacts are retained for a limited window. The API
+cleans local artifacts when the owning session is released, prunes older
+completed recordings automatically, and deletes hosted worker temporary
+files after download.
+
 ## Tasks
 
 Poll an async task:
