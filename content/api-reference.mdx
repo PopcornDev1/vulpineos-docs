@@ -127,13 +127,12 @@ Use pagination when the target spans multiple pages:
   "prompt": "Extract product names and prices from every catalog page.",
   "options": {
     "paginate": true,
-    "max_pages": 5,
-    "next_selector": "a[rel='next']"
+    "max_pages": 3
   }
 }
 ```
 
-Pagination merges repeated list fields across pages, de-dupes overlapping items, and enriches partial duplicates when a later page adds missing fields for the same entity.
+Pagination merges repeated list fields across pages, de-dupes overlapping items, and enriches partial duplicates when a later page adds missing fields for the same entity. `max_pages` lowers the per-request page cap; the service never follows more than five pages total.
 
 Response shape:
 
@@ -585,7 +584,7 @@ const client = new Vulpine({ apiKey: process.env.VULPINE_API_KEY })
 const result = await client.extract({
   url: 'https://example.com/catalog',
   prompt: 'Extract product names and prices',
-  options: { paginate: true, max_pages: 5 }
+  options: { paginate: true, max_pages: 3 }
 })
 ```
 
@@ -598,7 +597,7 @@ client = Vulpine(api_key=os.environ["VULPINE_API_KEY"])
 result = client.extract(ExtractRequest(
     url="https://example.com/catalog",
     prompt="Extract product names and prices",
-    options={"paginate": True, "max_pages": 5},
+    options={"paginate": True, "max_pages": 3},
 ))
 ```
 
