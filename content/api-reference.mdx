@@ -160,6 +160,7 @@ Response shape:
 ```
 
 Partial responses keep the same shape with `status: "partial"` and metadata explaining missing fields or retry behavior.
+Write endpoints use strict JSON decoding. Unknown fields or trailing JSON content return `400 invalid_request`.
 
 ## Authenticated Extract
 
