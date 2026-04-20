@@ -1,6 +1,6 @@
 ---
 title: "Web Panel — Browser Dashboard for VulpineOS Agent Management"
-description: "VulpineOS React web panel: 11-page dashboard for managing agents, proxies, contexts, security, scripts, logs, login, and settings."
+description: "VulpineOS React web panel: embedded browser dashboard for local and remote agent management."
 ---
 
 # Web Panel
@@ -9,19 +9,29 @@ A browser-based management interface embedded in the VulpineOS binary for monito
 
 ## Starting the Web Panel
 
-The panel is served automatically in serve mode:
+Local panel mode:
 
 ```bash
-vulpineos --serve --port 8443 --api-key $VULPINE_API_KEY
+./vulpineos panel
 ```
 
-Open `https://your-server:8443` in a browser. Enter your API key to authenticate.
+`vulpineos panel` binds to `127.0.0.1`, prints a direct panel URL, and opens it
+in the browser when possible. If `--api-key` is omitted, VulpineOS generates a
+session access key and includes it in the URL so the panel can log in directly.
 
-For local development without TLS:
+Networked serve mode:
 
 ```bash
-vulpineos --serve --port 8443 --api-key mykey --no-tls
-# Open http://localhost:8443
+./vulpineos serve --host 0.0.0.0 --port 8443 --api-key $VULPINE_API_KEY
+```
+
+If `--api-key` is omitted in serve mode, VulpineOS generates one at startup and
+prints both the access key and a direct panel URL containing the token.
+
+Open a remote panel from another machine:
+
+```bash
+./vulpineos remote --url https://your-server:8443 --api-key $VULPINE_API_KEY
 ```
 
 ## Pages
@@ -38,8 +48,10 @@ Agent list with status, fingerprint summary, token usage, and cost per agent. Sp
 
 ### Agent Detail
 
-Three tabs:
+Five operator views:
 - **Conversation** — Full message history with role-colored entries (user/assistant). Send messages to the agent via text input.
+- **Trace** — Tool calls, result summaries, and detected failed-action warnings.
+- **Raw** — Live OpenClaw session log stream with exact JSONL records.
 - **Recording** — Action timeline showing timestamped browser actions (navigate, click, type, scroll, screenshot).
 - **Fingerprint** — JSON view of the agent's assigned fingerprint (user agent, screen dimensions, WebGL, etc).
 
@@ -61,7 +73,9 @@ Add webhook endpoints with optional event filtering and secret headers. Remove r
 
 ### Scripts
 
-JSON script editor for the agent scripting DSL. Write scripts with 8 actions (navigate, click, type, wait, extract, screenshot, set, if). Run button executes the script and shows output in a live console panel.
+JSON script editor for the agent scripting DSL. This page is still partial: only
+the navigate path is wired to the backend today, and the remaining actions are
+not yet production-complete.
 
 ### Logs
 
@@ -71,7 +85,10 @@ Two operator views live here:
 
 ### Login
 
-API-key login screen for remote panel access. The panel stores only the key needed to authenticate its WebSocket session.
+Access-key login screen for remote panel access. The panel stores only the key
+needed to authenticate its WebSocket session. If you open the panel through a
+printed tokenized URL, the key is bootstrapped automatically and removed from
+the visible address bar after load.
 
 ### Settings
 
@@ -79,9 +96,11 @@ Configure LLM provider, model, and API key (persisted to `~/.vulpineos/config.js
 
 ## API Communication
 
-The panel communicates via WebSocket control messages to the `PanelAPI` handler. All messages go through the `/ws` endpoint with API key authentication.
+The panel communicates via WebSocket control messages to the `PanelAPI`
+handler. All messages go through the `/ws` endpoint with access-key
+authentication.
 
-30 control message types across 10 domains, verified against `internal/remote/api.go`:
+35 control message types across 10 domains, verified against `internal/remote/api.go`:
 
 | Domain | Messages |
 |--------|----------|
@@ -99,7 +118,7 @@ The panel communicates via WebSocket control messages to the `PanelAPI` handler.
 Example message flow:
 
 ```js
-// Connect with API key
+// Connect with access key
 const ws = new WebSocket('wss://server:8443/ws?token=API_KEY')
 
 // Send control message
@@ -123,7 +142,10 @@ Real-time events (telemetry, injection alerts, agent status, runtime audit event
 
 ### Single Binary
 
-The web panel's static assets (HTML, CSS, JS) are embedded in the Go binary using `//go:embed`. No external web server needed — `vulpineos --serve` starts the kernel, foxbridge CDP proxy, and web panel from a single binary.
+The web panel's static assets (HTML, CSS, JS) are embedded in the Go binary
+using `//go:embed`. No external web server is needed — `vulpineos panel` and
+`vulpineos serve` both start the kernel, foxbridge CDP proxy, and web panel
+from a single binary.
 
 ---
 

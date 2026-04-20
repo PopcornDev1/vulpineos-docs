@@ -46,16 +46,29 @@ docker compose up -d
 
 Then connect from any machine:
 ```bash
-vulpineos --remote wss://your-server:8443/ws --api-key YOUR_KEY
+vulpineos remote tui --url https://your-server:8443 --api-key YOUR_KEY
 ```
 
 ## First Run
 
-Launch VulpineOS:
+Launch the local TUI:
 
 ```bash
 ./vulpineos
+# or
+./vulpineos tui
 ```
+
+Launch the local panel instead:
+
+```bash
+./vulpineos panel
+```
+
+`vulpineos panel` binds to `127.0.0.1`, prints a direct panel URL, and opens
+the browser when possible. If no `--api-key` is provided, VulpineOS generates a
+session access key and includes it in the printed panel URL so the panel can
+log in directly.
 
 On first launch, the **setup wizard** appears:
 
@@ -63,7 +76,8 @@ On first launch, the **setup wizard** appears:
 2. **Enter API Key** — Paste your API key for the selected provider
 3. **Choose Model** — Pick the model to power your agents
 
-The wizard saves configuration to `~/.vulpineos/config.json` and generates `~/.vulpineos/openclaw.json` automatically.
+The wizard saves configuration to `~/.vulpineos/config.json` and generates
+`~/.openclaw-vulpine/openclaw.json` automatically.
 
 ## Creating Your First Agent
 
@@ -100,6 +114,31 @@ To explore the TUI without launching the browser engine:
 ```
 
 This runs the full interface with simulated data — useful for testing layouts or developing new panels.
+
+## Remote Modes
+
+Expose a server with the web panel and remote control API:
+
+```bash
+./vulpineos serve --host 0.0.0.0 --port 8443
+```
+
+If `--api-key` is omitted, VulpineOS generates one at startup and prints both
+the access key and a direct panel URL containing the token.
+
+Open a remote panel from another machine:
+
+```bash
+./vulpineos remote --url https://your-server:8443 --api-key YOUR_KEY
+# or explicitly:
+./vulpineos remote panel --url https://your-server:8443 --api-key YOUR_KEY
+```
+
+Connect the remote TUI:
+
+```bash
+./vulpineos remote tui --url https://your-server:8443 --api-key YOUR_KEY
+```
 
 ## Next Steps
 

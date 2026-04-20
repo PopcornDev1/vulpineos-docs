@@ -1,11 +1,15 @@
 ---
-title: "Remote Access — Deploy VulpineOS on a VPS with WebSocket"
-description: "VulpineOS remote deployment: TLS WebSocket server mode, API key authentication, connect TUI from anywhere."
+title: "Remote Access — Deploy VulpineOS on a VPS with Panel and TUI"
+description: "VulpineOS remote deployment: serve mode, access-key authentication, remote panel links, and remote TUI connections."
 ---
 
 # Remote Access — Deploy VulpineOS on a VPS
 
-VulpineOS supports running the browser kernel on one machine and the TUI on another. This is the recommended setup for production: run the kernel on a VPS with residential proxies, control it from your laptop.
+VulpineOS supports running the browser kernel on one machine and controlling it
+from another. The remote control plane has two operator modes:
+
+- **Remote panel** — open the embedded browser dashboard in your local browser
+- **Remote TUI** — run the terminal workbench against the remote runtime
 
 ## Three Modes
 
@@ -17,33 +21,51 @@ TUI and kernel on the same machine. No network involved.
 ./vulpineos
 ```
 
-### 2. Server Mode
+### 2. Serve Mode
 
-Expose the kernel over a WebSocket endpoint:
+Expose the runtime, web panel, and control API over the network:
 
 ```bash
-./vulpineos --serve --port 8443 --api-key YOUR_SECRET_KEY
+./vulpineos serve --host 0.0.0.0 --port 8443 --api-key YOUR_SECRET_KEY
 ```
 
 This starts:
 - The Firefox kernel
 - An HTTP/WebSocket server on the specified port
+- The embedded web panel at `/`
 - A `/health` endpoint for monitoring
-- A `/ws` endpoint for TUI connections
+- A `/ws` endpoint for panel and TUI connections
 
-### 3. Client Mode
+If `--api-key` is omitted, VulpineOS generates one at startup and prints both
+the access key and a direct panel URL containing the token.
 
-Connect the TUI to a remote kernel:
+### 3. Remote Panel
+
+Open the remote panel in your local browser:
 
 ```bash
-./vulpineos --remote wss://your-vps:8443/ws --api-key YOUR_SECRET_KEY
+./vulpineos remote --url https://your-vps:8443 --api-key YOUR_SECRET_KEY
+# or explicitly:
+./vulpineos remote panel --url https://your-vps:8443 --api-key YOUR_SECRET_KEY
 ```
 
-The TUI behaves identically to local mode — all panels, keybinds, and agent management work the same way. The WebSocket transport seamlessly replaces the pipe transport.
+If you omit the explicit remote mode, `panel` is the default.
+
+### 4. Remote TUI
+
+Connect the terminal workbench to a remote runtime:
+
+```bash
+./vulpineos remote tui --url https://your-vps:8443 --api-key YOUR_SECRET_KEY
+```
+
+The TUI behaves identically to local mode — all panels, keybinds, and agent
+management work the same way. The WebSocket transport replaces the local pipe
+transport.
 
 ## Authentication
 
-API key authentication supports two methods:
+Access-key authentication supports two methods:
 
 - **Header:** `Authorization: Bearer YOUR_KEY`
 - **Query parameter:** `?token=YOUR_KEY`
@@ -60,7 +82,8 @@ The WebSocket connection multiplexes three message types:
 | `control` | Client → Server | Administrative commands |
 | `tui_state` | Server → Client | State updates for TUI rendering |
 
-All Browser events (telemetry updates, injection alerts, trust warming state changes) are automatically broadcast to all connected clients.
+All browser events (telemetry updates, injection alerts, trust-warming state
+changes) are automatically broadcast to all connected clients.
 
 ## Health Check
 
@@ -78,8 +101,8 @@ curl https://your-vps:8443/health
 
 ## Security Considerations
 
-- Always use `wss://` (TLS) in production
-- Generate strong API keys: `openssl rand -hex 32`
+- Always use `wss://` / `https://` (TLS) in production
+- Provide a strong explicit access key when you need a stable credential
 - The server does not expose the kernel binary or filesystem — only Juggler protocol access
 - Each connected client gets its own message queue; one slow client cannot block others
 
