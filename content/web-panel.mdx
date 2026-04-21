@@ -18,6 +18,8 @@ Local panel mode:
 `vulpineos panel` binds to `127.0.0.1`, prints a direct panel URL, and opens it
 in the browser when possible. If `--api-key` is omitted, VulpineOS generates a
 session access key and includes it in the URL so the panel can log in directly.
+After load, the panel bootstraps that key into session-scoped browser storage
+and removes it from the visible address bar.
 
 Networked serve mode:
 
@@ -88,7 +90,8 @@ Two operator views live here:
 Access-key login screen for remote panel access. The panel stores only the key
 needed to authenticate its WebSocket session. If you open the panel through a
 printed tokenized URL, the key is bootstrapped automatically and removed from
-the visible address bar after load.
+the visible address bar after load. Manual login validates the key through
+`/auth/check` before opening the websocket.
 
 ### Settings
 
@@ -139,6 +142,9 @@ ws.onmessage = (e) => {
 ```
 
 Real-time events (telemetry, injection alerts, agent status, runtime audit events) are broadcast automatically to all connected clients.
+
+The operator UI now surfaces connecting, reconnecting, and failed websocket
+states inline and retries dropped sessions with exponential backoff.
 
 ### Single Binary
 

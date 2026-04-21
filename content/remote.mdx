@@ -71,6 +71,9 @@ Access-key authentication supports two methods:
 - **Query parameter:** `?token=YOUR_KEY`
 
 Keys are compared using constant-time comparison to prevent timing attacks.
+The browser login form validates explicit keys through `/auth/check`, while the
+panel websocket continues to use the tokenized URL path required by browser
+WebSocket clients.
 
 ## Relay Protocol
 
@@ -103,6 +106,7 @@ curl https://your-vps:8443/health
 
 - Always use `wss://` / `https://` (TLS) in production
 - Provide a strong explicit access key when you need a stable credential
+- Panel access keys are stored only for the current browser session
 - The server does not expose the kernel binary or filesystem — only Juggler protocol access
 - Each connected client gets its own message queue; one slow client cannot block others
 
