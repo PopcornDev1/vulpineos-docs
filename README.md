@@ -20,8 +20,9 @@ npm run dev
 The repo ships a repo-local smoke script for the local Playwright MCP:
 
 - `scripts/playwright/smoke-docs.js`
+- `scripts/playwright/capture-landing-fixtures.js`
 
-Point it at a running docs server with `VULPINE_DOCS_SMOKE_URL` and, if needed, override the screenshot destination with `VULPINE_DOCS_SMOKE_SCREENSHOT`. By default it writes a viewport screenshot to `/tmp/vulpineos-docs-smoke.png`.
+Point these at a running docs server with `VULPINE_DOCS_SMOKE_URL`. `smoke-docs.js` writes a viewport screenshot to `/tmp/vulpineos-docs-smoke.png` by default. `capture-landing-fixtures.js` writes deterministic landing-page fixtures to `/tmp/vulpineos-landing-desktop.png` and `/tmp/vulpineos-landing-mobile.png` by default.
 
 ## Stack
 
