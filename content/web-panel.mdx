@@ -73,7 +73,7 @@ The same page also includes a per-agent rotation editor: choose the target agent
 
 ### Security
 
-Lists all 7 active protections (injection filter, action-lock, CSP injection, DOM mutation monitoring, injection signatures, sandboxed evaluation, token-optimized DOM). Shows injection attempt feed from `Browser.injectionAttemptDetected` events in real-time.
+Runtime-backed protection status page. It now reflects what the runtime actually has active, available, or disabled instead of hard-coding everything as active. The same page still shows live injection attempts from `Browser.injectionAttemptDetected` events.
 
 ### Webhooks
 
@@ -81,9 +81,9 @@ Add webhook endpoints with optional event filtering and secret headers. Remove r
 
 ### Scripts
 
-JSON script editor for the agent scripting DSL. This page is still partial: only
-the navigate path is wired to the backend today, and the remaining actions are
-not yet production-complete.
+JSON script editor for the agent scripting DSL. Scripts now execute through the
+server-side scripting engine against a real browser context, and the page shows
+step-by-step execution results plus captured variables.
 
 ### Logs
 
@@ -109,7 +109,7 @@ The panel communicates via WebSocket control messages to the `PanelAPI`
 handler. All messages go through the `/ws` endpoint with access-key
 authentication.
 
-44 control message types across 11 domains, verified against `internal/remote/api.go`:
+46 control message types across 13 domains, verified against `internal/remote/api.go`:
 
 | Domain | Messages |
 |--------|----------|
@@ -121,6 +121,8 @@ authentication.
 | bus | pending, approve, reject, policies, addPolicy, removePolicy |
 | recording | getTimeline, export |
 | fingerprints | get, generate |
+| scripts | run |
+| security | status |
 | status | get |
 | runtime | list, export, setRetention |
 | contexts | list, create, remove |
