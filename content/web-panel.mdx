@@ -113,7 +113,7 @@ the visible address bar after load. Manual login validates the key through
 
 ### Settings
 
-Configure LLM provider, model, and API key (persisted to `~/.vulpineos/config.json`). Persist default agent budgets (USD + token ceiling). Kernel info: binary path, auto-restart status, context pool configuration.
+Configure LLM provider, model, and API key (persisted to `~/.vulpineos/config.json`). Persist default agent budgets (USD + token ceiling). Kernel info: binary path, auto-restart status, context pool configuration. When Sentinel is present, Settings also shows the current trust-lab state: variant bundles, trust recipes, maturity metrics, and assignment rules.
 
 ## API Communication
 
@@ -121,7 +121,7 @@ The panel communicates via WebSocket control messages to the `PanelAPI`
 handler. All messages go through the `/ws` endpoint with access-key
 authentication.
 
-46 control message types across 13 domains, verified against `internal/remote/api.go`:
+45 control message types across 14 domains, verified against `internal/remote/api.go`:
 
 | Domain | Messages |
 |--------|----------|
@@ -136,6 +136,7 @@ authentication.
 | scripts | run |
 | security | status |
 | status | get |
+| sentinel | get |
 | runtime | list, export, setRetention |
 | contexts | list, create, remove |
 
